@@ -6,6 +6,7 @@ import slick.jdbc.JdbcProfile
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import utils.PasswordUtils
 
 class UserRepository @Inject() (override protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] {
@@ -34,11 +35,16 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
   }
 
   def validateUser(username: String, password: String): Future[Option[User]] = {
-    db.run(users.filter(user => user.username === username && user.password === password).result.headOption)
+    getUserByUsername(username).map {
+      case Some(user) if PasswordUtils.checkPassword(password, user.password) => Some(user)
+      case _ => None
+    }
   }
 
   def createNewUser(user: User): Future[User] = {
-    val insertAction = (users returning users.map(_.id) into ((user, id) => user.copy(id = Some(id)))) += user
+    val hashedPassword = PasswordUtils.hashPassword(user.password)
+    val userWithHashedPassword = user.copy(password = hashedPassword)
+    val insertAction = (users returning users.map(_.id) into ((user, id) => userWithHashedPassword.copy(id = Some(id)))) += userWithHashedPassword
     db.run(insertAction)
   }
 
@@ -51,10 +57,20 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
   }
 
   def updateUser(id: Int, user: User): Future[Int] = {
-    db.run(users.filter(_.id === id).update(user))
+    getUserById(id).flatMap {
+      case Some(existingUser) =>
+        val updatedUser = if (user.password != existingUser.password) {
+          user.copy(password = PasswordUtils.hashPassword(user.password))
+        } else {
+          user
+        }
+
+        db.run(users.filter(_.id === id).update(updatedUser))
+
+      case None =>
+        Future.successful(0)
+    }
   }
-
-
 
   private class UserTable(tag: Tag) extends Table[User](tag, "users") {
     def id = column[Int]("UserID", O.AutoInc, O.PrimaryKey)

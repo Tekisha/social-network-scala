@@ -11,6 +11,7 @@ libraryDependencies += guice
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.1" % Test
 libraryDependencies += "org.playframework" %% "play-slick" % "6.1.0"
 libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.27"
+libraryDependencies += "org.mindrot" % "jbcrypt" % "0.4"
 
 
 
