@@ -6,6 +6,7 @@ import repositories.UserRepository
 import scala.concurrent.{ExecutionContext, Future}
 import utils.JwtUtils
 import exceptions.UsernameAlreadyExistsException
+import utils.PasswordUtils
 
 @Singleton
 class UserService @Inject() (userRepository: UserRepository)(implicit ec: ExecutionContext) {
@@ -14,12 +15,14 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
     userRepository.getUserByUsername(username).flatMap {
       case Some(_) => Future.failed(new UsernameAlreadyExistsException())
       case None =>
-        userRepository.createNewUser(User(None, username, password))
+        val hashedPassword = PasswordUtils.hashPassword(password)
+        val newUser = User(None, username, hashedPassword)
+        userRepository.createNewUser(newUser)
     }
   }
 
   def authenticateUser(username: String, password: String): Future[Option[String]] = {
-    userRepository.validateUser(username, password).map {
+    validateUser(username, password).map {
       case Some(user) =>
         val token = JwtUtils.createToken(user.id.get, user.username, expirationPeriodInDays = 7)
         Some(token)
@@ -70,9 +73,34 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
   }
 
   private def performUserUpdate(id: Int, user: User, existingUser: User): Future[Either[String, (User, String)]] = {
-    userRepository.updateUser(id, user).map { _ =>
-      val newToken = JwtUtils.createToken(id, user.username, expirationPeriodInDays = 7)
-      Right((user.copy(id = Some(id)), newToken))
+    val updatedUser = prepareUpdatedUser(id, user, existingUser)
+
+    userRepository.updateUser(id, updatedUser).map { updateCount =>
+      if (updateCount > 0) {
+        generateUpdatedToken(updatedUser)
+      } else {
+        Left("Failed to update user")
+      }
+    }
+  }
+
+  private def prepareUpdatedUser(id: Int, user: User, existingUser: User): User = {
+    if (user.password != existingUser.password) {
+      user.copy(id = Some(id), password = PasswordUtils.hashPassword(user.password))
+    } else {
+      user.copy(id = Some(id))
+    }
+  }
+
+  private def generateUpdatedToken(user: User): Either[String, (User, String)] = {
+    val newToken = JwtUtils.createToken(user.id.get, user.username, expirationPeriodInDays = 7)
+    Right((user, newToken))
+  }
+
+  private def validateUser(username: String, password: String): Future[Option[User]] = {
+    userRepository.getUserByUsername(username).map {
+      case Some(user) if PasswordUtils.checkPassword(password, user.password) => Some(user)
+      case _ => None
     }
   }
 }
