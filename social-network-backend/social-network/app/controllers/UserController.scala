@@ -38,7 +38,7 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
           case ex: UsernameAlreadyExistsException =>
             Conflict(Json.obj("message" -> ex.getMessage))
           case ex: Exception =>
-            InternalServerError(Json.obj("message" -> ex.getMessage))
+            InternalServerError(Json.obj("message" -> "An unexpected error occurred"))
         }
       }
     )
