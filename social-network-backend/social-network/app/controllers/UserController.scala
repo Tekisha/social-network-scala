@@ -7,9 +7,10 @@ import models.User
 import scala.concurrent.{ExecutionContext, Future}
 import play.api.libs.json._
 import services.UserService
+import actions.AuthAction
 
 @Singleton
-class UserController @Inject()(cc: ControllerComponents, userRepository: UserRepository, userService: UserService)(implicit ec: ExecutionContext) extends AbstractController(cc) {
+class UserController @Inject()(cc: ControllerComponents, userRepository: UserRepository, userService: UserService, authAction: AuthAction)(implicit ec: ExecutionContext) extends AbstractController(cc) {
 
   implicit val userFormat: OFormat[User] = Json.format[User]
 
@@ -43,9 +44,8 @@ class UserController @Inject()(cc: ControllerComponents, userRepository: UserRep
       errors => Future.successful(BadRequest(Json.obj("message" -> "Invalid data"))),
       loginData => {
         userService.authenticateUser(loginData.username, loginData.password).map {
-          case Some(user) =>
-            val response = UserResponse(user.id, user.username)
-            Ok(Json.toJson(response))
+          case Some(token) =>
+            Ok(Json.obj("token" -> token))
           case None =>
             Unauthorized(Json.obj("message" -> "Invalid credentials"))
         }
@@ -53,21 +53,21 @@ class UserController @Inject()(cc: ControllerComponents, userRepository: UserRep
     )
   }
 
-  def getAllUsers: Action[AnyContent] = Action.async { implicit request =>
+  def getAllUsers: Action[AnyContent] = authAction.async { implicit request =>
     userRepository.getAllUsers.map { users =>
       val userResponses = users.map(user => UserResponse(user.id, user.username))
       Ok(Json.toJson(userResponses))
     }
   }
 
-  def getUserById(id: Int): Action[AnyContent] = Action.async { implicit request =>
+  def getUserById(id: Int): Action[AnyContent] = authAction.async { implicit request =>
     userRepository.getUserById(id).map {
       case Some(user) => Ok(Json.toJson(UserResponse(user.id, user.username)))
       case None => NotFound(Json.obj("message" -> s"User with id $id not found"))
     }
   }
 
-  def updateUser(id: Int): Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def updateUser(id: Int): Action[JsValue] = authAction.async(parse.json) { implicit request =>
     request.body.validate[User].fold(
       errors => Future.successful(BadRequest(Json.obj("message" -> "Invalid data"))),
       user => {
@@ -83,7 +83,7 @@ class UserController @Inject()(cc: ControllerComponents, userRepository: UserRep
     )
   }
 
-  def deleteUser(id: Int): Action[AnyContent] = Action.async { implicit request =>
+  def deleteUser(id: Int): Action[AnyContent] = authAction.async { implicit request =>
     userRepository.getUserById(id).flatMap {
       case Some(_) =>
         userRepository.deleteUser(id).map { _ =>

@@ -4,6 +4,7 @@ import javax.inject._
 import models.User
 import repositories.UserRepository
 import scala.concurrent.{ExecutionContext, Future}
+import utils.JwtUtils
 
 @Singleton
 class UserService @Inject() (userRepository: UserRepository)(implicit ec: ExecutionContext) {
@@ -16,7 +17,12 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
     }
   }
 
-  def authenticateUser(username: String, password: String): Future[Option[User]] = {
-    userRepository.validateUser(username, password)
+  def authenticateUser(username: String, password: String): Future[Option[String]] = {
+    userRepository.validateUser(username, password).map {
+      case Some(user) =>
+        val token = JwtUtils.createToken(user.username, expirationPeriodInDays = 7)
+        Some(token)
+      case None => None
+    }
   }
 }
