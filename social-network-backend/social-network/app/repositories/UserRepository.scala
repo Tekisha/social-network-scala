@@ -60,9 +60,9 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
     getUserById(id).flatMap {
       case Some(existingUser) =>
         val updatedUser = if (user.password != existingUser.password) {
-          user.copy(password = PasswordUtils.hashPassword(user.password))
+          user.copy(id = Some(id), password = PasswordUtils.hashPassword(user.password))
         } else {
-          user
+          user.copy(id = Some(id)) 
         }
 
         db.run(users.filter(_.id === id).update(updatedUser))
@@ -72,9 +72,11 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
     }
   }
 
+
+
   private class UserTable(tag: Tag) extends Table[User](tag, "users") {
     def id = column[Int]("UserID", O.AutoInc, O.PrimaryKey)
-    def username = column[String]("Username")
+    def username = column[String]("Username", O.Length(255), O.Unique)
     def password = column[String]("Password")
 
     override def * = (id.?, username, password) <> (User.tupled, User.unapply)
