@@ -15,13 +15,6 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
 
   private val users = TableQuery[UserTable]
 
-  def createSchemaIfNotExists(): Future[Unit] = {
-    val schema = users.schema
-    db.run(DBIO.seq(
-      schema.createIfNotExists
-    )).map(_=>())
-  }
-
   def getAllUsers: Future[Seq[User]] = {
     db.run(users.result)
   }
@@ -62,7 +55,7 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
         val updatedUser = if (user.password != existingUser.password) {
           user.copy(id = Some(id), password = PasswordUtils.hashPassword(user.password))
         } else {
-          user.copy(id = Some(id)) 
+          user.copy(id = Some(id))
         }
 
         db.run(users.filter(_.id === id).update(updatedUser))
@@ -75,9 +68,9 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
 
 
   private class UserTable(tag: Tag) extends Table[User](tag, "users") {
-    def id = column[Int]("UserID", O.AutoInc, O.PrimaryKey)
-    def username = column[String]("Username", O.Length(255), O.Unique)
-    def password = column[String]("Password")
+    def id = column[Int]("id", O.AutoInc, O.PrimaryKey)
+    def username = column[String]("username", O.Length(255), O.Unique)
+    def password = column[String]("password")
 
     override def * = (id.?, username, password) <> (User.tupled, User.unapply)
   }

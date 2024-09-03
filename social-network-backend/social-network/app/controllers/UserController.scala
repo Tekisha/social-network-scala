@@ -8,6 +8,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.libs.json._
 import services.UserService
 import actions.AuthAction
+import java.sql.SQLIntegrityConstraintViolationException
+import exceptions.UsernameAlreadyExistsException
 
 @Singleton
 class UserController @Inject()(cc: ControllerComponents, userService: UserService, authAction: AuthAction)(implicit ec: ExecutionContext) extends AbstractController(cc) {
@@ -33,7 +35,10 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
           val response = UserResponse(createdUser.id, createdUser.username)
           Created(Json.toJson(response))
         }.recover {
-          case ex: Exception => Conflict(Json.obj("message" -> ex.getMessage))
+          case ex: UsernameAlreadyExistsException =>
+            Conflict(Json.obj("message" -> ex.getMessage))
+          case ex: Exception =>
+            InternalServerError(Json.obj("message" -> ex.getMessage))
         }
       }
     )
@@ -71,7 +76,7 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
     request.body.validate[User].fold(
       errors => Future.successful(BadRequest(Json.obj("message" -> "Invalid data"))),
       user => {
-        userService.updateUser(id, user, request.username).map {
+        userService.updateUser(id, user, request.userId).map {
           case Right((updatedUser, newToken)) =>
             Ok(Json.obj(
               "message" -> "User updated successfully",
@@ -87,9 +92,9 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
 
 
   def deleteUser(id: Int): Action[AnyContent] = authAction.async { implicit request =>
-    userService.deleteUser(id, request.username).map {
+    userService.deleteUser(id, request.userId).map {
       case Right(_) => NoContent
-      case Left(errorMessage) => Forbidden(Json.obj("message" -> errorMessage))
+      case Left(errorMessage) => Forbidden(Json.obj("message" -> JsString(errorMessage.toString)))
     }
   }
 }
