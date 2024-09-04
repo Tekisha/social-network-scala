@@ -34,4 +34,35 @@ class UserControllerSpec extends TestBase {
       contentAsJson(secondResult) mustBe Json.obj("message" -> "Username already exists")
     }
   }
+
+  "UserController POST login" should {
+
+    "successfully login with correct credentials" in {
+      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register", Headers(), registrationData)
+      val registrationResult = route(app, registrationRequest).get
+      status(registrationResult) mustBe CREATED
+
+      val loginData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login", Headers(), loginData)
+      val loginResult = route(app, loginRequest).get
+
+      status(loginResult) mustBe OK
+      (contentAsJson(loginResult) \ "token").as[String] must not be empty
+    }
+
+    "fail to login with invalid credentials" in {
+      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register", Headers(), registrationData)
+      val registrationResult = route(app, registrationRequest).get
+      status(registrationResult) mustBe CREATED
+
+      val loginData = Json.obj("username" -> "testuser", "password" -> "wrongpassword")
+      val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login", Headers(), loginData)
+      val loginResult = route(app, loginRequest).get
+
+      status(loginResult) mustBe UNAUTHORIZED
+      contentAsJson(loginResult) mustBe Json.obj("message" -> "Invalid credentials")
+    }
+  }
 }
