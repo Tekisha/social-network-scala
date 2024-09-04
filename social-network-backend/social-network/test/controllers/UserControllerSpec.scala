@@ -111,4 +111,65 @@ class UserControllerSpec extends TestBase {
       status(result) mustBe UNAUTHORIZED
     }
   }
+
+  "UserController GET getUserById" should {
+
+    "return the user details for a valid user ID" in {
+      //register a user
+      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register")
+        .withBody(registrationData)
+      val registrationResult = route(app, registrationRequest).get
+      status(registrationResult) mustBe CREATED
+      val userId = (contentAsJson(registrationResult) \ "id").as[Int]
+
+      // Log in to get the token
+      val loginData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login")
+        .withBody(loginData)
+      val loginResult = route(app, loginRequest).get
+      status(loginResult) mustBe OK
+      val token = (contentAsJson(loginResult) \ "token").as[String]
+
+      // Fetch the user by ID using the token
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, s"/users/$userId")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val result = route(app, request).get
+
+      status(result) mustBe OK
+      (contentAsJson(result) \ "username").as[String] mustBe "testuser"
+    }
+
+    "return 404 for a non-existent user ID" in {
+      // log in to get the token
+      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register")
+        .withBody(registrationData)
+      val registrationResult = route(app, registrationRequest).get
+      status(registrationResult) mustBe CREATED
+
+      val loginData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login")
+        .withBody(loginData)
+      val loginResult = route(app, loginRequest).get
+      status(loginResult) mustBe OK
+      val token = (contentAsJson(loginResult) \ "token").as[String]
+
+      // Attempt to fetch a non-existent user by ID
+      val nonExistentUserId = 999
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, s"/users/$nonExistentUserId")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val result = route(app, request).get
+
+      status(result) mustBe NOT_FOUND
+      (contentAsJson(result) \ "message").as[String] mustBe s"User with id $nonExistentUserId not found"
+    }
+
+    "return 401 Unauthorized when no token is provided" in {
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/users/1")
+      val result = route(app, request).get
+
+      status(result) mustBe UNAUTHORIZED
+    }
+  }
 }
