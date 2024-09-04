@@ -38,18 +38,12 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
     }
   }
 
-  def login: Action[JsValue] = Action.async(parse.json) { implicit request =>
-    request.body.validate[LoginData].fold(
-      errors => Future.successful(BadRequest(Json.obj("message" -> "Invalid data"))),
-      loginData => {
-        userService.authenticateUser(loginData.username, loginData.password).map {
-          case Some(token) =>
-            Ok(Json.obj("token" -> token))
-          case None =>
-            Unauthorized(Json.obj("message" -> "Invalid credentials"))
-        }
-      }
-    )
+  def login: Action[LoginData] = Action.async(parse.json[LoginData]) { implicit request =>
+    val loginData = request.body
+    userService.authenticateUser(loginData.username, loginData.password).map {
+      case Some(token) => Ok(Json.obj("token" -> token))
+      case None => Unauthorized(Json.obj("message" -> "Invalid credentials"))
+    }
   }
 
   def getAllUsers: Action[AnyContent] = authAction.async { implicit request =>
@@ -66,24 +60,19 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
     }
   }
 
-  def updateUser(id: Int): Action[JsValue] = authAction.async(parse.json) { implicit request =>
-    request.body.validate[User].fold(
-      errors => Future.successful(BadRequest(Json.obj("message" -> "Invalid data"))),
-      user => {
-        userService.updateUser(id, user, request.userId).map {
-          case Right((updatedUser, newToken)) =>
-            Ok(Json.obj(
-              "message" -> "User updated successfully",
-              "token" -> newToken,
-              "user" -> Json.toJson(UserResponse(updatedUser.id, updatedUser.username))
-            ))
-          case Left(errorMessage) =>
-            Conflict(Json.obj("message" -> errorMessage))
-        }
-      }
-    )
+  def updateUser(id: Int): Action[User] = authAction.async(parse.json[User]) { implicit request =>
+    val user = request.body
+    userService.updateUser(id, user, request.userId).map {
+      case Right((updatedUser, newToken)) =>
+        Ok(Json.obj(
+          "message" -> "User updated successfully",
+          "token" -> newToken,
+          "user" -> Json.toJson(UserResponse(updatedUser.id, updatedUser.username))
+        ))
+      case Left(errorMessage) =>
+        Conflict(Json.obj("message" -> errorMessage))
+    }
   }
-
 
   def deleteUser(id: Int): Action[AnyContent] = authAction.async { implicit request =>
     userService.deleteUser(id, request.userId).map {
