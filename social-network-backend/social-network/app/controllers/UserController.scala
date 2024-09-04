@@ -27,19 +27,15 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
   case class LoginData(username: String, password: String)
   implicit val loginFormat: OFormat[LoginData] = Json.format[LoginData]
 
-  def register: Action[JsValue] = Action.async(parse.json) { implicit request =>
-    request.body.validate[RegistrationData].fold(
-      errors => Future.successful(BadRequest(Json.obj("message" -> "Invalid data"))),
-      registrationData => {
-        userService.registerUser(registrationData.username, registrationData.password).map { createdUser =>
-          val response = UserResponse(createdUser.id, createdUser.username)
-          Created(Json.toJson(response))
-        }.recover {
-          case ex: UsernameAlreadyExistsException =>
-            Conflict(Json.obj("message" -> ex.getMessage))
-        }
-      }
-    )
+  def register: Action[RegistrationData] = Action.async(parse.json[RegistrationData]) { implicit request =>
+    val registrationData = request.body
+    userService.registerUser(registrationData.username, registrationData.password).map { createdUser =>
+      val response = UserResponse(createdUser.id, createdUser.username)
+      Created(Json.toJson(response))
+    }.recover {
+      case ex: UsernameAlreadyExistsException =>
+        Conflict(Json.obj("message" -> ex.getMessage))
+    }
   }
 
   def login: Action[JsValue] = Action.async(parse.json) { implicit request =>
