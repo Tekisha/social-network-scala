@@ -22,11 +22,11 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
   }
 
   def authenticateUser(username: String, password: String): Future[Option[String]] = {
-    validateUser(username, password).map {
-      case Some(user) =>
+    userRepository.getUserByUsername(username).map {
+      case Some(user) if PasswordUtils.checkPassword(password, user.password) =>
         val token = JwtUtils.createToken(user.id.get, user.username, expirationPeriodInDays = 7)
         Some(token)
-      case None => None
+      case _ => None
     }
   }
 
@@ -95,12 +95,5 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
   private def generateUpdatedToken(user: User): Either[String, (User, String)] = {
     val newToken = JwtUtils.createToken(user.id.get, user.username, expirationPeriodInDays = 7)
     Right((user, newToken))
-  }
-
-  private def validateUser(username: String, password: String): Future[Option[User]] = {
-    userRepository.getUserByUsername(username).map {
-      case Some(user) if PasswordUtils.checkPassword(password, user.password) => Some(user)
-      case _ => None
-    }
   }
 }
