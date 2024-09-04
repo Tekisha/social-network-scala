@@ -1,11 +1,10 @@
-import org.scalatestplus.play._
-import org.scalatestplus.play.guice._
-import play.api.test._
-import play.api.test.Helpers._
+import base.TestBase
 import play.api.libs.json.Json
+import play.api.test.Helpers._
+import play.api.test.{FakeRequest, Injecting}
 import controllers.UserController
 
-class UserControllerSpec extends PlaySpec with GuiceOneAppPerTest {
+class UserControllerSpec extends TestBase {
 
   lazy val controller = app.injector.instanceOf[UserController]
 

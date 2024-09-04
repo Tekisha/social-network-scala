@@ -20,6 +20,7 @@ libraryDependencies += "com.typesafe.play" %% "play-slick-evolutions" % "5.0.0"
 libraryDependencies += "com.typesafe.play" %% "play-test" % "2.8.8" % Test
 libraryDependencies += "org.apache.pekko" %% "pekko-actor" % "1.0.0"
 libraryDependencies += "org.apache.pekko" %% "pekko-stream" % "1.0.0"
+libraryDependencies += "org.apache.pekko" %% "pekko-actor-testkit-typed" % "1.0.3" % Test
 
 libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.EarlySemVer
 dependencyOverrides += "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.0"
