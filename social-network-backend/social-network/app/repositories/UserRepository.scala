@@ -45,6 +45,10 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
     db.run(users.filter(_.id === id).update(updatedUser))
   }
 
+  def deleteAllUsers(): Future[Int] = {
+    db.run(users.delete)
+  }
+
   private class UserTable(tag: Tag) extends Table[User](tag, "users") {
     def id = column[Int]("id", O.AutoInc, O.PrimaryKey)
     def username = column[String]("username", O.Length(255), O.Unique)
