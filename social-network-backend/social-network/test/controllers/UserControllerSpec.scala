@@ -172,4 +172,79 @@ class UserControllerSpec extends TestBase {
       status(result) mustBe UNAUTHORIZED
     }
   }
+
+  "UserController PUT updateUser" should {
+
+    "successfully update the user when authenticated" in {
+      // register a user
+      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register")
+        .withBody(registrationData)
+      val registrationResult = route(app, registrationRequest).get
+      status(registrationResult) mustBe CREATED
+
+      // Log in to get the token
+      val loginData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login")
+        .withBody(loginData)
+      val loginResult = route(app, loginRequest).get
+      status(loginResult) mustBe OK
+      val token = (contentAsJson(loginResult) \ "token").as[String]
+
+      val updatedUserData = Json.obj("username" -> "updateduser", "password" -> "newpassword123")
+
+      // Send the update request with the token
+      val request: FakeRequest[JsObject] = FakeRequest(PUT, "/users")
+        .withHeaders("Authorization" -> s"Bearer $token")
+        .withBody(updatedUserData)
+      val result = route(app, request).get
+
+      status(result) mustBe OK
+      (contentAsJson(result) \ "message").as[String] mustBe "User updated successfully"
+      (contentAsJson(result) \ "user" \ "username").as[String] mustBe "updateduser"
+      (contentAsJson(result) \ "token").as[String] must not be empty
+    }
+
+    "return 409 Conflict when the update fails" in {
+      // Register a user
+      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register")
+        .withBody(registrationData)
+      val registrationResult = route(app, registrationRequest).get
+      status(registrationResult) mustBe CREATED
+
+      val registrationData1 = Json.obj("username" -> "existinguser", "password" -> "newpassword123")
+      val registrationRequest1: FakeRequest[JsObject] = FakeRequest(POST, "/register")
+        .withBody(registrationData1)
+      val registrationResult1 = route(app, registrationRequest1).get
+      status(registrationResult1) mustBe CREATED
+
+      // Log in to get the token
+      val loginData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login")
+        .withBody(loginData)
+      val loginResult = route(app, loginRequest).get
+      status(loginResult) mustBe OK
+      val token = (contentAsJson(loginResult) \ "token").as[String]
+
+      // Attempt to update with invalid data
+      val invalidUpdateData = Json.obj("username" -> "existinguser", "password" -> "newpassword123")
+      val request: FakeRequest[JsObject] = FakeRequest(PUT, "/users")
+        .withHeaders("Authorization" -> s"Bearer $token")
+        .withBody(invalidUpdateData)
+      val result = route(app, request).get
+
+      status(result) mustBe CONFLICT
+      (contentAsJson(result) \ "message").as[String] mustBe "Username already exists"
+    }
+
+    "return 401 Unauthorized when no token is provided" in {
+      val updateData = Json.obj("username" -> "updateduser", "password" -> "newpassword123")
+      val request: FakeRequest[JsObject] = FakeRequest(PUT, "/users").withBody(updateData)
+
+      val result = route(app, request).get
+
+      status(result) mustBe UNAUTHORIZED
+    }
+  }
 }
