@@ -247,4 +247,38 @@ class UserControllerSpec extends TestBase {
       status(result) mustBe UNAUTHORIZED
     }
   }
+
+  "UserController DELETE deleteUser" should {
+
+    "successfully delete the authenticated user" in {
+      // register a user
+      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register")
+        .withBody(registrationData)
+      val registrationResult = route(app, registrationRequest).get
+      status(registrationResult) mustBe CREATED
+
+      // Log in to get the token
+      val loginData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login")
+        .withBody(loginData)
+      val loginResult = route(app, loginRequest).get
+      status(loginResult) mustBe OK
+      val token = (contentAsJson(loginResult) \ "token").as[String]
+
+      // Send the delete request
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(DELETE, "/users")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val result = route(app, request).get
+
+      status(result) mustBe NO_CONTENT
+    }
+
+    "return 401 Unauthorized when no token is provided" in {
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(DELETE, "/users")
+      val result = route(app, request).get
+
+      status(result) mustBe UNAUTHORIZED
+    }
+  }
 }
