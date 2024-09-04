@@ -60,9 +60,11 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
     }
   }
 
-  def updateUser(id: Int): Action[User] = authAction.async(parse.json[User]) { implicit request =>
+  def updateUser: Action[User] = authAction.async(parse.json[User]) { implicit request =>
     val user = request.body
-    userService.updateUser(id, user, request.userId).map {
+    val authenticatedUserId = request.userId
+
+    userService.updateUser(authenticatedUserId, user).map {
       case Right((updatedUser, newToken)) =>
         Ok(Json.obj(
           "message" -> "User updated successfully",
@@ -74,10 +76,13 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
     }
   }
 
-  def deleteUser(id: Int): Action[AnyContent] = authAction.async { implicit request =>
-    userService.deleteUser(id, request.userId).map {
+  def deleteUser: Action[AnyContent] = authAction.async { implicit request =>
+    val authenticatedUserId = request.userId
+
+    userService.deleteUser(authenticatedUserId).map {
       case Right(_) => NoContent
-      case Left(errorMessage) => Forbidden(Json.obj("message" -> JsString(errorMessage.toString)))
+      case Left(errorMessage) => Forbidden(Json.obj("message" -> errorMessage))
     }
   }
+
 }

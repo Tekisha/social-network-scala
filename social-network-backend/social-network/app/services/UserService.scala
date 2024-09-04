@@ -38,37 +38,29 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
     userRepository.getUserById(id)
   }
 
-  def updateUser(id: Int, user: User, authenticatedUserId: Int): Future[Either[String, (User, String)]] = {
-    if (id != authenticatedUserId) {
-      Future.successful(Left("You can only update your own account"))
-    } else {
-      userRepository.getUserById(id).flatMap {
-        case Some(existingUser) =>
-          if (user.username != existingUser.username) {
-            userRepository.getUserByUsername(user.username).flatMap {
-              case Some(_) => Future.successful(Left("Username already exists"))
-              case None =>
-                performUserUpdate(id, user, existingUser)
-            }
-          } else {
-            performUserUpdate(id, user, existingUser)
+  def updateUser(authenticatedUserId: Int, user: User): Future[Either[String, (User, String)]] = {
+    userRepository.getUserById(authenticatedUserId).flatMap {
+      case Some(existingUser) =>
+        if (user.username != existingUser.username) {
+          userRepository.getUserByUsername(user.username).flatMap {
+            case Some(_) => Future.successful(Left("Username already exists"))
+            case None =>
+              performUserUpdate(authenticatedUserId, user, existingUser)
           }
-        case None => Future.successful(Left("User not found"))
-      }
+        } else {
+          performUserUpdate(authenticatedUserId, user, existingUser)
+        }
+      case None => Future.successful(Left("User not found"))
     }
   }
 
-  def deleteUser(id: Int, authenticatedUserId: Int): Future[Either[String, Unit]] = {
-    if (id != authenticatedUserId) {
-      Future.successful(Left("You can only delete your own account"))
-    } else {
-      userRepository.getUserById(id).flatMap {
-        case Some(_) =>
-          userRepository.deleteUser(id).map { _ =>
-            Right(())
-          }
-        case None => Future.successful(Left(s"User with id $id not found"))
-      }
+  def deleteUser(authenticatedUserId: Int): Future[Either[String, Unit]] = {
+    userRepository.getUserById(authenticatedUserId).flatMap {
+      case Some(_) =>
+        userRepository.deleteUser(authenticatedUserId).map { _ =>
+          Right(())
+        }
+      case None => Future.successful(Left(s"User with id $authenticatedUserId not found"))
     }
   }
 

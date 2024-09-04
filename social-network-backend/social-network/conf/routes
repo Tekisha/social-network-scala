@@ -9,8 +9,8 @@ GET     /assets/*file               controllers.Assets.versioned(path="/public",
 # User routes
 GET     /users                   controllers.UserController.getAllUsers
 GET     /users/:id               controllers.UserController.getUserById(id: Int)
-PUT     /users/:id               controllers.UserController.updateUser(id: Int)
-DELETE  /users/:id               controllers.UserController.deleteUser(id: Int)
+PUT     /users                   controllers.UserController.updateUser
+DELETE  /users                   controllers.UserController.deleteUser
 POST    /register                controllers.UserController.register
 POST    /login                   controllers.UserController.login
 
