@@ -17,34 +17,27 @@ class UserControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe CREATED
-      contentAsJson(result) mustBe Json.obj("id" -> 1, "username" -> "testuser")
+      contentAsJson(result) mustBe Json.obj("id" -> 4, "username" -> "testuser")
     }
 
     "fail to register a user with an existing username" in {
       val registrationData = Json.obj("username" -> "existinguser", "password" -> "password123")
 
       // First request to register the user
-      val firstRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register", Headers(), registrationData)
-      val firstResult = route(app, firstRequest).get
-      status(firstResult) mustBe CREATED
+      val request: FakeRequest[JsObject] = FakeRequest(POST, "/register", Headers(), registrationData)
+      val result = route(app, request).get
 
-      // Second request with the same username
-      val secondResult = route(app, firstRequest).get
-      status(secondResult) mustBe CONFLICT
-      contentAsJson(secondResult) mustBe Json.obj("message" -> "Username already exists")
+      status(result) mustBe CONFLICT
+      contentAsJson(result) mustBe Json.obj("message" -> "Username already exists")
     }
   }
 
   "UserController POST login" should {
 
     "successfully login with correct credentials" in {
-      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
-      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register", Headers(), registrationData)
-      val registrationResult = route(app, registrationRequest).get
-      status(registrationResult) mustBe CREATED
-
-      val loginData = Json.obj("username" -> "testuser", "password" -> "password123")
-      val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login", Headers(), loginData)
+      val loginData = Json.obj("username" -> "testuser1", "password" -> "password123")
+      val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login")
+        .withBody(loginData)
       val loginResult = route(app, loginRequest).get
 
       status(loginResult) mustBe OK
@@ -52,13 +45,9 @@ class UserControllerSpec extends TestBase {
     }
 
     "fail to login with invalid credentials" in {
-      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
-      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register", Headers(), registrationData)
-      val registrationResult = route(app, registrationRequest).get
-      status(registrationResult) mustBe CREATED
-
-      val loginData = Json.obj("username" -> "testuser", "password" -> "wrongpassword")
-      val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login", Headers(), loginData)
+      val loginData = Json.obj("username" -> "testuser1", "password" -> "wrongpassword")
+      val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login")
+        .withBody(loginData)
       val loginResult = route(app, loginRequest).get
 
       status(loginResult) mustBe UNAUTHORIZED
@@ -68,22 +57,7 @@ class UserControllerSpec extends TestBase {
 
   "UserController GET getAllUsers" should {
 
-    "return a list of users when authenticated, including two registered users" in {
-      //register the first user
-      val registrationData1 = Json.obj("username" -> "testuser1", "password" -> "password123")
-      val registrationRequest1: FakeRequest[JsObject] = FakeRequest(POST, "/register")
-        .withBody(registrationData1)
-      val registrationResult1 = route(app, registrationRequest1).get
-      status(registrationResult1) mustBe CREATED
-
-      // Register the second user
-      val registrationData2 = Json.obj("username" -> "testuser2", "password" -> "password456")
-      val registrationRequest2: FakeRequest[JsObject] = FakeRequest(POST, "/register")
-        .withBody(registrationData2)
-      val registrationResult2 = route(app, registrationRequest2).get
-      status(registrationResult2) mustBe CREATED
-
-      //log in as the first user to get the token
+    "return a list of users when authenticated" in {
       val loginData = Json.obj("username" -> "testuser1", "password" -> "password123")
       val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login")
         .withBody(loginData)
@@ -91,7 +65,6 @@ class UserControllerSpec extends TestBase {
       status(loginResult) mustBe OK
       val token = (contentAsJson(loginResult) \ "token").as[String]
 
-      //fetch the list of users
       val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/users")
         .withHeaders("Authorization" -> s"Bearer $token")
       val result = route(app, request).get
@@ -105,7 +78,6 @@ class UserControllerSpec extends TestBase {
 
     "return 401 Unauthorized when no token is provided" in {
       val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/users")
-
       val result = route(app, request).get
 
       status(result) mustBe UNAUTHORIZED
@@ -115,16 +87,8 @@ class UserControllerSpec extends TestBase {
   "UserController GET getUserById" should {
 
     "return the user details for a valid user ID" in {
-      //register a user
-      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
-      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register")
-        .withBody(registrationData)
-      val registrationResult = route(app, registrationRequest).get
-      status(registrationResult) mustBe CREATED
-      val userId = (contentAsJson(registrationResult) \ "id").as[Int]
-
       // Log in to get the token
-      val loginData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val loginData = Json.obj("username" -> "testuser1", "password" -> "password123")
       val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login")
         .withBody(loginData)
       val loginResult = route(app, loginRequest).get
@@ -132,23 +96,17 @@ class UserControllerSpec extends TestBase {
       val token = (contentAsJson(loginResult) \ "token").as[String]
 
       // Fetch the user by ID using the token
-      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, s"/users/$userId")
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/users/1")
         .withHeaders("Authorization" -> s"Bearer $token")
       val result = route(app, request).get
 
       status(result) mustBe OK
-      (contentAsJson(result) \ "username").as[String] mustBe "testuser"
+      (contentAsJson(result) \ "username").as[String] mustBe "testuser1"
     }
 
     "return 404 for a non-existent user ID" in {
-      // log in to get the token
-      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
-      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register")
-        .withBody(registrationData)
-      val registrationResult = route(app, registrationRequest).get
-      status(registrationResult) mustBe CREATED
-
-      val loginData = Json.obj("username" -> "testuser", "password" -> "password123")
+      // Log in to get the token
+      val loginData = Json.obj("username" -> "testuser1", "password" -> "password123")
       val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login")
         .withBody(loginData)
       val loginResult = route(app, loginRequest).get
@@ -176,21 +134,15 @@ class UserControllerSpec extends TestBase {
   "UserController PUT updateUser" should {
 
     "successfully update the user when authenticated" in {
-      // register a user
-      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
-      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register")
-        .withBody(registrationData)
-      val registrationResult = route(app, registrationRequest).get
-      status(registrationResult) mustBe CREATED
-
       // Log in to get the token
-      val loginData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val loginData = Json.obj("username" -> "testuser1", "password" -> "password123")
       val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login")
         .withBody(loginData)
       val loginResult = route(app, loginRequest).get
       status(loginResult) mustBe OK
       val token = (contentAsJson(loginResult) \ "token").as[String]
 
+      // Prepare the updated user data
       val updatedUserData = Json.obj("username" -> "updateduser", "password" -> "newpassword123")
 
       // Send the update request with the token
@@ -206,28 +158,15 @@ class UserControllerSpec extends TestBase {
     }
 
     "return 409 Conflict when the update fails" in {
-      // Register a user
-      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
-      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register")
-        .withBody(registrationData)
-      val registrationResult = route(app, registrationRequest).get
-      status(registrationResult) mustBe CREATED
-
-      val registrationData1 = Json.obj("username" -> "existinguser", "password" -> "newpassword123")
-      val registrationRequest1: FakeRequest[JsObject] = FakeRequest(POST, "/register")
-        .withBody(registrationData1)
-      val registrationResult1 = route(app, registrationRequest1).get
-      status(registrationResult1) mustBe CREATED
-
       // Log in to get the token
-      val loginData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val loginData = Json.obj("username" -> "testuser1", "password" -> "password123")
       val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login")
         .withBody(loginData)
       val loginResult = route(app, loginRequest).get
       status(loginResult) mustBe OK
       val token = (contentAsJson(loginResult) \ "token").as[String]
 
-      // Attempt to update with invalid data
+      // Attempt to update with an existing username
       val invalidUpdateData = Json.obj("username" -> "existinguser", "password" -> "newpassword123")
       val request: FakeRequest[JsObject] = FakeRequest(PUT, "/users")
         .withHeaders("Authorization" -> s"Bearer $token")
@@ -251,15 +190,8 @@ class UserControllerSpec extends TestBase {
   "UserController DELETE deleteUser" should {
 
     "successfully delete the authenticated user" in {
-      // register a user
-      val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
-      val registrationRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register")
-        .withBody(registrationData)
-      val registrationResult = route(app, registrationRequest).get
-      status(registrationResult) mustBe CREATED
-
       // Log in to get the token
-      val loginData = Json.obj("username" -> "testuser", "password" -> "password123")
+      val loginData = Json.obj("username" -> "testuser1", "password" -> "password123")
       val loginRequest: FakeRequest[JsObject] = FakeRequest(POST, "/login")
         .withBody(loginData)
       val loginResult = route(app, loginRequest).get
