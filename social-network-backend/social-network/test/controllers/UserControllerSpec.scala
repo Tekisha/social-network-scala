@@ -3,18 +3,18 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Injecting}
 import controllers.UserController
+import play.api.mvc.Headers
+import play.api.libs.json.{Json, JsObject}
 
 class UserControllerSpec extends TestBase {
-
-  lazy val controller = app.injector.instanceOf[UserController]
 
   "UserController POST register" should {
 
     "successfully register a new user" in {
       val registrationData = Json.obj("username" -> "testuser", "password" -> "password123")
 
-      val request = FakeRequest(POST, "/register").withJsonBody(registrationData)
-      val result = controller.register().apply(request)
+      val request: FakeRequest[JsObject] = FakeRequest(POST, "/register", Headers(), registrationData)
+      val result = route(app, request).get
 
       status(result) mustBe CREATED
       contentAsJson(result) mustBe Json.obj("id" -> 1, "username" -> "testuser")
@@ -24,12 +24,12 @@ class UserControllerSpec extends TestBase {
       val registrationData = Json.obj("username" -> "existinguser", "password" -> "password123")
 
       // First request to register the user
-      val firstRequest = FakeRequest(POST, "/register").withJsonBody(registrationData)
-      val firstResult = controller.register().apply(firstRequest)
+      val firstRequest: FakeRequest[JsObject] = FakeRequest(POST, "/register", Headers(), registrationData)
+      val firstResult = route(app, firstRequest).get
       status(firstResult) mustBe CREATED
 
       // Second request with the same username
-      val secondResult = controller.register().apply(firstRequest)
+      val secondResult = route(app, firstRequest).get
       status(secondResult) mustBe CONFLICT
       contentAsJson(secondResult) mustBe Json.obj("message" -> "Username already exists")
     }
