@@ -19,9 +19,9 @@ abstract class TestBase extends PlaySpec with BeforeAndAfterEach with GuiceOneSe
     .configure(
       "slick.dbs.default.profile" -> "slick.jdbc.MySQLProfile$",
       "slick.dbs.default.db.driver" -> "com.mysql.cj.jdbc.Driver",
-      "slick.dbs.default.db.url" -> "jdbc:mysql://localhost:3306/social_network",
-      "slick.dbs.default.db.user" -> "root",
-      "slick.dbs.default.db.password" -> "admin",
+      "slick.dbs.default.db.url" -> "jdbc:mysql://localhost:3307/test_db",  // Use Docker MySQL URL
+      "slick.dbs.default.db.user" -> "test_user",
+      "slick.dbs.default.db.password" -> "test_password",
       "play.evolutions.enabled" -> "true",
       "play.evolutions.autoApply" -> "true",
       "play.filters.enabled" -> Seq()   // Disable the AllowedHostsFilter
