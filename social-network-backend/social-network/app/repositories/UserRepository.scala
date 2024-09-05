@@ -1,19 +1,16 @@
 package repositories
 
-import models.User
+import models.{User, Tables}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import utils.PasswordUtils
 
 class UserRepository @Inject() (override protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
-  extends HasDatabaseConfigProvider[JdbcProfile] {
+  extends HasDatabaseConfigProvider[JdbcProfile] with Tables {
 
   import profile.api._
-
-  private val users = TableQuery[UserTable]
 
   def getAllUsers: Future[Seq[User]] = {
     db.run(users.result)
@@ -47,13 +44,5 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
 
   def deleteAllUsers(): Future[Int] = {
     db.run(users.delete)
-  }
-
-  private class UserTable(tag: Tag) extends Table[User](tag, "users") {
-    def id = column[Int]("id", O.AutoInc, O.PrimaryKey)
-    def username = column[String]("username", O.Length(255), O.Unique)
-    def password = column[String]("password")
-
-    override def * = (id.?, username, password) <> (User.tupled, User.unapply)
   }
 }
