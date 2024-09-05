@@ -9,6 +9,10 @@ import models.User
 import utils.JwtUtils
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.db.{DBApi}
+import play.api.libs.json.{Json, JsObject}
+import play.api.test.Helpers._
+import play.api.test.{FakeRequest, Injecting}
+import play.api.mvc.{AnyContentAsJson, Headers, AnyContentAsEmpty}
 
 abstract class TestBase extends PlaySpec with BeforeAndAfterEach with GuiceOneServerPerSuite {
 
@@ -28,8 +32,6 @@ abstract class TestBase extends PlaySpec with BeforeAndAfterEach with GuiceOneSe
     )
     .build()
 
-  val token: String = JwtUtils.createToken(1, "pera@email.com", 7)
-
   override def beforeEach(): Unit = {
     super.beforeEach()
     Evolutions.applyEvolutions(dbApi.database("default"))
@@ -38,5 +40,17 @@ abstract class TestBase extends PlaySpec with BeforeAndAfterEach with GuiceOneSe
   override def afterEach(): Unit = {
     Evolutions.cleanupEvolutions(dbApi.database("default"))
     super.afterEach()
+  }
+
+  def getTokenForTestUser(username: String, password: String): String = {
+    val loginData = Json.obj("username" -> username, "password" -> password)
+
+    val loginRequest: FakeRequest[AnyContentAsJson] =
+      FakeRequest(POST, "/login").withHeaders(Headers("Content-Type" -> "application/json")).withBody(AnyContentAsJson(loginData))
+
+    val loginResult = route(app, loginRequest).get
+
+    status(loginResult) mustBe OK
+    (contentAsJson(loginResult) \ "token").as[String]
   }
 }

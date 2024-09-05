@@ -14,4 +14,11 @@ DELETE  /users                   controllers.UserController.deleteUser
 POST    /register                controllers.UserController.register
 POST    /login                   controllers.UserController.login
 
+# Post routes
+POST    /posts                   controllers.PostController.createPost
+PUT     /posts/:postId           controllers.PostController.updatePost(postId: Int)
+DELETE  /posts/:postId           controllers.PostController.deletePost(postId: Int)
+GET     /posts/user/:userId      controllers.PostController.getUserPosts(userId: Int)
+GET     /posts                   controllers.PostController.getAllPosts
+GET     /posts/:postId           controllers.PostController.getPostById(postId: Int)
 
