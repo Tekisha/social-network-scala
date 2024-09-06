@@ -2,14 +2,24 @@ package services
 
 import javax.inject.Inject
 import models.FriendRequest
-import repositories.{FriendRequestRepository, UserRepository}
+import repositories.{FriendRequestRepository, UserRepository, FriendshipRepository}
 import scala.concurrent.{ExecutionContext, Future}
 import java.sql.Timestamp
 import enums.FriendRequestStatus
 import dtos.FriendRequestDetails
+import slick.dbio.DBIO
+import slick.jdbc.JdbcProfile
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 
-class FriendRequestService @Inject()(friendRequestRepository: FriendRequestRepository, userRepository: UserRepository)
-                                    (implicit ec: ExecutionContext) {
+class FriendRequestService @Inject()(
+                                      friendRequestRepository: FriendRequestRepository,
+                                      userRepository: UserRepository,
+                                      friendshipRepository: FriendshipRepository,
+                                      protected val dbConfigProvider: DatabaseConfigProvider
+                                    )(implicit ec: ExecutionContext)
+  extends HasDatabaseConfigProvider[JdbcProfile] {
+
+  import profile.api._
 
   def sendRequest(requesterId: Int, receiverId: Int): Future[Either[String, FriendRequest]] = {
     friendRequestRepository.findPendingRequestBetweenUsers(requesterId, receiverId).flatMap {
@@ -32,12 +42,26 @@ class FriendRequestService @Inject()(friendRequestRepository: FriendRequestRepos
     } else {
       friendRequestRepository.findById(requestId).flatMap {
         case Some(request) if request.receiverId == userId =>
-          friendRequestRepository.updateStatus(requestId, status).map(Right(_))
+          friendshipRepository.areFriends(request.requesterId, request.receiverId).flatMap {
+            case true => Future.successful(Left("Users are already friends"))
+            case false =>
+              if (status == FriendRequestStatus.Accepted) {
+                val addFriendAndUpdateStatus = for {
+                  _ <- friendshipRepository.addFriend(request.requesterId, request.receiverId)
+                  _ <- friendRequestRepository.updateStatus(requestId, status)
+                } yield ()
+
+                db.run(addFriendAndUpdateStatus.transactionally).map(_ => Right(1))
+              } else {
+                db.run(friendRequestRepository.updateStatus(requestId, status)).map(Right(_))
+              }
+          }
         case Some(_) => Future.successful(Left("Forbidden"))
         case None => Future.successful(Left("Request not found"))
       }
     }
   }
+
 
   def deleteRequest(requestId: Int, userId: Int): Future[Either[String, Int]] = {
     friendRequestRepository.findById(requestId).flatMap {

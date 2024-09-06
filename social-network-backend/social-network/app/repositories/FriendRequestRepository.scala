@@ -19,7 +19,9 @@ class FriendRequestRepository @Inject()(override protected val dbConfigProvider:
 
   def findById(id: Int): Future[Option[FriendRequest]] = db.run(friendRequests.filter(_.id === id).result.headOption)
 
-  def updateStatus(id: Int, status: FriendRequestStatus): Future[Int] = db.run(friendRequests.filter(_.id === id).map(_.status).update(status))
+  def updateStatus(id: Int, status: FriendRequestStatus): DBIO[Int] = {
+    friendRequests.filter(_.id === id).map(_.status).update(status)
+  }
 
   def delete(id: Int): Future[Int] = db.run(friendRequests.filter(_.id === id).delete)
 
