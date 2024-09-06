@@ -22,3 +22,12 @@ GET     /posts/user/:userId      controllers.PostController.getUserPosts(userId:
 GET     /posts                   controllers.PostController.getAllPosts
 GET     /posts/:postId           controllers.PostController.getPostById(postId: Int)
 
+# Friend request routes
+POST    /friendRequests                        controllers.FriendRequestController.sendFriendRequest
+PUT     /friendRequests/:requestId/respond     controllers.FriendRequestController.respondToRequest(requestId: Int)
+DELETE  /friendRequests/:requestId             controllers.FriendRequestController.deleteRequest(requestId: Int)
+GET     /friendRequests/:requestId       controllers.FriendRequestController.getFriendRequestById(requestId: Int)
+GET     /friendRequests                     controllers.FriendRequestController.getAllFriendRequests
+
+
+

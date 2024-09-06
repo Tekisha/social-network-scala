@@ -28,6 +28,7 @@ abstract class TestBase extends PlaySpec with BeforeAndAfterEach with GuiceOneSe
       "slick.dbs.default.db.password" -> "test_password",
       "play.evolutions.enabled" -> "true",
       "play.evolutions.autoApply" -> "true",
+      "play.evolutions.autoApplyDowns" -> "true",
       "play.filters.enabled" -> Seq()   // Disable the AllowedHostsFilter
     )
     .build()
