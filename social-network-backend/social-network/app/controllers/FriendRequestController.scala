@@ -8,6 +8,7 @@ import actions.AuthAction
 import scala.concurrent.{ExecutionContext, Future}
 import models.FriendRequest
 import utils.JsonFormatUtils._
+import enums.FriendRequestStatus
 
 @Singleton
 class FriendRequestController @Inject()(cc: ControllerComponents, friendRequestService: FriendRequestService, authAction: AuthAction)
@@ -33,12 +34,14 @@ class FriendRequestController @Inject()(cc: ControllerComponents, friendRequestS
 
   def respondToRequest(requestId: Int): Action[RespondFriendRequestData] = authAction.async(parse.json[RespondFriendRequestData]) { implicit request =>
     val userId = request.userId
-    val status = request.body.status
-
-    friendRequestService.respondToRequest(requestId, userId, status).map {
-      case Right(_) => Ok(Json.obj("message" -> s"Friend request $status successfully"))
-      case Left("Forbidden") => Forbidden(Json.obj("message" -> "You are not authorized to respond to this request"))
-      case Left(errorMessage) => BadRequest(Json.obj("message" -> errorMessage))
+    FriendRequestStatus.fromString(request.body.status) match {
+      case Some(status) =>
+        friendRequestService.respondToRequest(requestId, userId, status).map {
+          case Right(_) => Ok(Json.obj("message" -> s"Friend request ${status.value.toLowerCase} successfully"))
+          case Left("Forbidden") => Forbidden(Json.obj("message" -> "You are not authorized to respond to this request"))
+          case Left(errorMessage) => BadRequest(Json.obj("message" -> errorMessage))
+        }
+      case None => Future.successful(BadRequest(Json.obj("message" -> "Invalid status")))
     }
   }
 

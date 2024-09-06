@@ -5,6 +5,7 @@ import models.FriendRequest
 import repositories.FriendRequestRepository
 import scala.concurrent.{ExecutionContext, Future}
 import java.sql.Timestamp
+import enums.FriendRequestStatus
 
 class FriendRequestService @Inject()(friendRequestRepository: FriendRequestRepository)
                                     (implicit ec: ExecutionContext) {
@@ -17,15 +18,15 @@ class FriendRequestService @Inject()(friendRequestRepository: FriendRequestRepos
           None,
           requesterId,
           receiverId,
-          "pending",
+          FriendRequestStatus.Pending,
           new Timestamp(System.currentTimeMillis())
         )
         friendRequestRepository.create(friendRequest).map(Right(_))
     }
   }
 
-  def respondToRequest(requestId: Int, userId: Int, status: String): Future[Either[String, Int]] = {
-    if (status != "accepted" && status != "rejected") {
+  def respondToRequest(requestId: Int, userId: Int, status: FriendRequestStatus): Future[Either[String, Int]] = {
+    if (status != FriendRequestStatus.Accepted && status != FriendRequestStatus.Rejected) {
       Future.successful(Left("Invalid status"))
     } else {
       friendRequestRepository.findById(requestId).flatMap {

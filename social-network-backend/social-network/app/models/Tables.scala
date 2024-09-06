@@ -3,9 +3,13 @@ package models
 import slick.jdbc.JdbcProfile
 import play.api.db.slick.HasDatabaseConfigProvider
 import java.sql.Timestamp
+import enums.FriendRequestStatus
 
 trait Tables { self: HasDatabaseConfigProvider[JdbcProfile] =>
   import profile.api._
+
+  implicit val friendRequestStatusMapper: BaseColumnType[FriendRequestStatus] =
+    MappedColumnType.base[FriendRequestStatus, String](_.value, FriendRequestStatus.fromString(_).get)
 
   class UserTable(tag: Tag) extends Table[User](tag, "users") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
@@ -31,7 +35,7 @@ trait Tables { self: HasDatabaseConfigProvider[JdbcProfile] =>
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def requesterId = column[Int]("requester_id")
     def receiverId = column[Int]("receiver_id")
-    def status = column[String]("status")
+    def status = column[FriendRequestStatus]("status")
     def createdAt = column[Timestamp]("created_at")
 
     def * = (id.?, requesterId, receiverId, status, createdAt) <> ((FriendRequest.apply _).tupled, FriendRequest.unapply)
