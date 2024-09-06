@@ -9,6 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import models.FriendRequest
 import utils.JsonFormatUtils._
 import enums.FriendRequestStatus
+import dtos.FriendRequestDetails
 
 @Singleton
 class FriendRequestController @Inject()(cc: ControllerComponents, friendRequestService: FriendRequestService, authAction: AuthAction)
@@ -57,7 +58,7 @@ class FriendRequestController @Inject()(cc: ControllerComponents, friendRequestS
 
   def getFriendRequestById(requestId: Int): Action[AnyContent] = authAction.async { implicit request =>
     friendRequestService.findById(requestId).map {
-      case Some(friendRequest) => Ok(Json.toJson(friendRequest))
+      case Some(friendRequestDetails) => Ok(Json.toJson(friendRequestDetails))
       case None => NotFound(Json.obj("message" -> "Friend request not found"))
     }
   }

@@ -102,6 +102,9 @@ class FriendRequestControllerSpec extends TestBase {
 
       status(result) mustBe OK
       (contentAsJson(result) \ "receiverId").as[Int] mustBe 2
+      (contentAsJson(result) \ "requesterId").as[Int] mustBe 1
+      (contentAsJson(result) \ "requesterUsername").as[String] mustBe "testuser1"
+      (contentAsJson(result) \ "receiverUsername").as[String] mustBe "testuser2"
     }
 
     "return 404 for non-existent friend request ID" in {
@@ -129,9 +132,18 @@ class FriendRequestControllerSpec extends TestBase {
       val requests = contentAsJson(result).as[Seq[JsObject]]
 
       requests.nonEmpty mustBe true
+
       val requesterIds = requests.map(request => (request \ "requesterId").as[Int])
+      val receiverIds = requests.map(request => (request \ "receiverId").as[Int])
 
       requesterIds must contain(1)
+      receiverIds must contain(2)
+
+      val requesterUsernames = requests.map(request => (request \ "requesterUsername").as[String])
+      val receiverUsernames = requests.map(request => (request \ "receiverUsername").as[String])
+
+      requesterUsernames must contain("testuser1")
+      receiverUsernames must contain("testuser2")
     }
 
     "return 401 Unauthorized when no token is provided" in {
