@@ -27,7 +27,7 @@ class FriendRequestService @Inject()(friendRequestRepository: FriendRequestRepos
       friendRequestRepository.findById(requestId).flatMap {
         case Some(request) if request.receiverId == userId =>
           friendRequestRepository.updateStatus(requestId, status).map(Right(_))
-        case Some(_) => Future.successful(Left("You are not authorized to respond to this request"))
+        case Some(_) => Future.successful(Left("Forbidden"))
         case None => Future.successful(Left("Request not found"))
       }
     }
@@ -37,7 +37,7 @@ class FriendRequestService @Inject()(friendRequestRepository: FriendRequestRepos
     friendRequestRepository.findById(requestId).flatMap {
       case Some(request) if request.requesterId == userId =>
         friendRequestRepository.delete(requestId).map(Right(_))
-      case Some(_) => Future.successful(Left("You are not authorized to delete this request"))
+      case Some(_) => Future.successful(Left("Forbidden"))
       case None => Future.successful(Left("Request not found"))
     }
   }

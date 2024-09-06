@@ -36,6 +36,7 @@ class FriendRequestController @Inject()(cc: ControllerComponents, friendRequestS
 
     friendRequestService.respondToRequest(requestId, userId, status).map {
       case Right(_) => Ok(Json.obj("message" -> s"Friend request $status successfully"))
+      case Left("Forbidden") => Forbidden(Json.obj("message" -> "You are not authorized to respond to this request"))
       case Left(errorMessage) => BadRequest(Json.obj("message" -> errorMessage))
     }
   }
@@ -45,7 +46,8 @@ class FriendRequestController @Inject()(cc: ControllerComponents, friendRequestS
 
     friendRequestService.deleteRequest(requestId, userId).map {
       case Right(_) => NoContent
-      case Left(errorMessage) => NotFound(Json.obj("message" -> errorMessage))
+      case Left("Forbidden") => Forbidden(Json.obj("message" -> "You are not authorized to delete this request"))
+      case Left(errorMessage) => BadRequest(Json.obj("message" -> errorMessage))
     }
   }
 
