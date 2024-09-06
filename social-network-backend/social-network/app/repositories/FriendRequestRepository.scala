@@ -25,4 +25,11 @@ class FriendRequestRepository @Inject()(override protected val dbConfigProvider:
   def findByUserId(userId: Int): Future[Seq[FriendRequest]] = {
     db.run(friendRequests.filter(req => req.requesterId === userId || req.receiverId === userId).result)
   }
+
+  def findPendingRequestBetweenUsers(requesterId: Int, receiverId: Int): Future[Option[FriendRequest]] = {
+    db.run(friendRequests.filter(req =>
+      (req.requesterId === requesterId && req.receiverId === receiverId || req.requesterId === receiverId && req.receiverId === requesterId) &&
+        req.status === "pending"
+    ).result.headOption)
+  }
 }

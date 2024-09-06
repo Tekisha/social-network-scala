@@ -9,15 +9,19 @@ import java.sql.Timestamp
 class FriendRequestService @Inject()(friendRequestRepository: FriendRequestRepository)
                                     (implicit ec: ExecutionContext) {
 
-  def sendRequest(requesterId: Int, receiverId: Int): Future[FriendRequest] = {
-    val friendRequest = FriendRequest(
-      None,
-      requesterId,
-      receiverId,
-      "pending",
-      new Timestamp(System.currentTimeMillis())
-    )
-    friendRequestRepository.create(friendRequest)
+  def sendRequest(requesterId: Int, receiverId: Int): Future[Either[String, FriendRequest]] = {
+    friendRequestRepository.findPendingRequestBetweenUsers(requesterId, receiverId).flatMap {
+      case Some(_) => Future.successful(Left("A pending friend request already exists between these users"))
+      case None =>
+        val friendRequest = FriendRequest(
+          None,
+          requesterId,
+          receiverId,
+          "pending",
+          new Timestamp(System.currentTimeMillis())
+        )
+        friendRequestRepository.create(friendRequest).map(Right(_))
+    }
   }
 
   def respondToRequest(requestId: Int, userId: Int, status: String): Future[Either[String, Int]] = {

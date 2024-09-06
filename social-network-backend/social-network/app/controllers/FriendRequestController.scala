@@ -25,8 +25,9 @@ class FriendRequestController @Inject()(cc: ControllerComponents, friendRequestS
     val requesterId = request.userId
     val receiverId = (request.body \ "receiverId").as[Int]
 
-    friendRequestService.sendRequest(requesterId, receiverId).map { friendRequest =>
-      Created(Json.toJson(friendRequest))
+    friendRequestService.sendRequest(requesterId, receiverId).map {
+      case Right(friendRequest) => Created(Json.toJson(friendRequest))
+      case Left(errorMessage) => BadRequest(Json.obj("message" -> errorMessage))
     }
   }
 
