@@ -65,6 +65,13 @@ class PostControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe NO_CONTENT
+
+      val getRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/posts/1")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val getResult = route(app, getRequest).get
+
+      status(getResult) mustBe NOT_FOUND
+      (contentAsJson(getResult) \ "message").as[String] mustBe "Post not found"
     }
 
     "return forbidden when trying to delete a post of another user" in {

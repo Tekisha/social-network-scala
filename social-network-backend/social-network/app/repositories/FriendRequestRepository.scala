@@ -19,12 +19,18 @@ class FriendRequestRepository @Inject()(override protected val dbConfigProvider:
 
   def findById(id: Int): Future[Option[FriendRequest]] = db.run(friendRequests.filter(_.id === id).result.headOption)
 
-  def updateStatus(id: Int, status: FriendRequestStatus): Future[Int] = db.run(friendRequests.filter(_.id === id).map(_.status).update(status))
+  def updateStatus(id: Int, status: FriendRequestStatus): DBIO[Int] = {
+    friendRequests.filter(_.id === id).map(_.status).update(status)
+  }
 
   def delete(id: Int): Future[Int] = db.run(friendRequests.filter(_.id === id).delete)
 
-  def findByUserId(userId: Int): Future[Seq[FriendRequest]] = {
-    db.run(friendRequests.filter(req => req.requesterId === userId || req.receiverId === userId).result)
+  def findByUserId(userId: Int, page: Int, pageSize: Int): Future[Seq[FriendRequest]] = {
+    val offset = (page - 1) * pageSize
+    db.run(friendRequests.filter(req => req.requesterId === userId || req.receiverId === userId)
+      .drop(offset)
+      .take(pageSize)
+      .result)
   }
 
   def findPendingRequestBetweenUsers(requesterId: Int, receiverId: Int): Future[Option[FriendRequest]] = {

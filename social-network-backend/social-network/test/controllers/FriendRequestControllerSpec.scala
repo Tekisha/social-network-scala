@@ -31,7 +31,7 @@ class FriendRequestControllerSpec extends TestBase {
 
     "fail to send a friend request if there is already a pending request between users" in {
       val sendFriendRequestData = Json.obj("receiverId" -> 2)
-      val token = getTokenForTestUser("testuser1", "password123")
+      val token = getTokenForTestUser("existingUser", "password789")
 
       // Second request should fail because there's already a pending request
       val duplicateRequest: FakeRequest[JsObject] = FakeRequest(POST, "/friendRequests", Headers("Authorization" -> s"Bearer $token"), sendFriendRequestData)
@@ -46,13 +46,28 @@ class FriendRequestControllerSpec extends TestBase {
 
     "successfully respond to a friend request" in {
       val respondFriendRequestData = Json.obj("status" -> "accepted")
-      val token = getTokenForTestUser("testuser2", "password456")
+      val token = getTokenForTestUser("existingUser", "password789")
 
-      val request: FakeRequest[JsObject] = FakeRequest(PUT, "/friendRequests/1/respond", Headers("Authorization" -> s"Bearer $token"), respondFriendRequestData)
+      val request: FakeRequest[JsObject] = FakeRequest(PUT, "/friendRequests/2/respond", Headers("Authorization" -> s"Bearer $token"), respondFriendRequestData)
       val result = route(app, request).get
 
       status(result) mustBe OK
       (contentAsJson(result) \ "message").as[String] mustBe "Friend request accepted successfully"
+
+      val friendshipsRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendships")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val friendshipsResult = route(app, friendshipsRequest).get
+
+      status(friendshipsResult) mustBe OK
+      val friendships = contentAsJson(friendshipsResult).as[Seq[JsObject]]
+
+      val friendDetails = friendships.map { f =>
+        val friendId = (f \ "friendId").as[Int]
+        val username = (f \ "username").as[String]
+        (friendId, username)
+      }
+
+      friendDetails must contain((2, "testuser2"))
     }
 
     "return forbidden when trying to respond to a request not addressed to the user" in {
@@ -64,6 +79,34 @@ class FriendRequestControllerSpec extends TestBase {
 
       status(result) mustBe FORBIDDEN
       (contentAsJson(result) \ "message").as[String] mustBe "You are not authorized to respond to this request"
+    }
+
+    "return an error when users are already friends" in {
+      val respondFriendRequestData = Json.obj("status" -> "accepted")
+      val token = getTokenForTestUser("testuser2", "password456")
+
+      val request: FakeRequest[JsObject] = FakeRequest(PUT, "/friendRequests/1/respond", Headers("Authorization" -> s"Bearer $token"), respondFriendRequestData)
+      val result = route(app, request).get
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "message").as[String] mustBe "Users are already friends"
+
+      // Verify that no duplicate friendship was created
+      val friendshipsRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendships")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val friendshipsResult = route(app, friendshipsRequest).get
+
+      status(friendshipsResult) mustBe OK
+      val friendships = contentAsJson(friendshipsResult).as[Seq[JsObject]]
+
+      val friendDetails = friendships.map { f =>
+        val friendId = (f \ "friendId").as[Int]
+        val username = (f \ "username").as[String]
+        (friendId, username)
+      }
+
+      friendDetails must contain((1, "testuser1"))
+      friendDetails.size mustBe 1
     }
   }
 
@@ -77,6 +120,13 @@ class FriendRequestControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe NO_CONTENT
+
+      val getRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendRequests/1")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val getResult = route(app, getRequest).get
+
+      status(getResult) mustBe NOT_FOUND
+      (contentAsJson(getResult) \ "message").as[String] mustBe "Friend request not found"
     }
 
     "return forbidden when trying to delete a request sent by another user" in {

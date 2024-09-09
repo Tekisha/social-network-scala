@@ -164,6 +164,13 @@ class UserControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe NO_CONTENT
+
+      val getRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/users/1")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val getResult = route(app, getRequest).get
+
+      status(getResult) mustBe NOT_FOUND
+      (contentAsJson(getResult) \ "message").as[String] mustBe "User with id 1 not found"
     }
 
     "return 401 Unauthorized when no token is provided" in {

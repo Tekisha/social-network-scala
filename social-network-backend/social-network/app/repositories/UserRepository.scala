@@ -12,8 +12,9 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
 
   import profile.api._
 
-  def getAllUsers: Future[Seq[User]] = {
-    db.run(users.result)
+  def getAllUsers(page: Int, pageSize: Int): Future[Seq[User]] = {
+    val offset = (page - 1) * pageSize
+    db.run(users.drop(offset).take(pageSize).result)
   }
 
   def getUserById(id: Int): Future[Option[User]] = {

@@ -30,8 +30,8 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
     }
   }
 
-  def getAllUsers: Future[Seq[User]] = {
-    userRepository.getAllUsers
+  def getAllUsers(page: Int, pageSize: Int): Future[Seq[User]] = {
+    userRepository.getAllUsers(page, pageSize)
   }
 
   def getUserById(id: Int): Future[Option[User]] = {

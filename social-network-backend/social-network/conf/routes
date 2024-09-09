@@ -29,5 +29,9 @@ DELETE  /friendRequests/:requestId             controllers.FriendRequestControll
 GET     /friendRequests/:requestId       controllers.FriendRequestController.getFriendRequestById(requestId: Int)
 GET     /friendRequests                     controllers.FriendRequestController.getAllFriendRequests
 
+# Friendship routes
+GET     /friendships                  controllers.FriendshipController.getFriends
+DELETE  /friendships/:friendId         controllers.FriendshipController.removeFriend(friendId: Int)
+
 
 

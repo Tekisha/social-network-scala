@@ -44,7 +44,19 @@ trait Tables { self: HasDatabaseConfigProvider[JdbcProfile] =>
     def receiver = foreignKey("receiver_fk", receiverId, TableQuery[UserTable])(_.id)
   }
 
+  class FriendshipTable(tag: Tag) extends Table[Friendship](tag, "friendships") {
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+    def userId1 = column[Int]("user_id1")
+    def userId2 = column[Int]("user_id2")
+
+    def * = (id.?, userId1, userId2) <> ((Friendship.apply _).tupled, Friendship.unapply)
+
+    def user1 = foreignKey("user1_fk", userId1, TableQuery[UserTable])(_.id)
+    def user2 = foreignKey("user2_fk", userId2, TableQuery[UserTable])(_.id)
+  }
+
   protected val users = TableQuery[UserTable]
   protected val posts = TableQuery[PostTable]
   protected val friendRequests = TableQuery[FriendRequestTable]
+  protected val friendships = TableQuery[FriendshipTable]
 }
