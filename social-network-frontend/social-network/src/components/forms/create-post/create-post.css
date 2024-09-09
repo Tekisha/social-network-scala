@@ -1,0 +1,72 @@
+.create-post-form {
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.create-post-input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    background-color: #fff;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.create-post-input-container:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15); /* Lift on hover */
+}
+
+/* Textarea Styling */
+.create-post-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    resize: none;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    outline: none;
+    font-family: inherit;
+}
+
+.create-post-textarea:focus {
+    border-color: #0095f6;
+    box-shadow: 0 2px 5px rgba(0, 149, 246, 0.3);
+}
+
+/* Submit Button Styling */
+.submit-button {
+    align-self: flex-end;
+    padding: 0.5rem 1.5rem;
+    background-color: #0095f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.submit-button:hover {
+    background-color: #007bb5;
+    transform: translateY(-2px);
+}
+
+.submit-button i {
+    margin-left: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.submit-button:active {
+    transform: scale(0.97);
+    background-color: #005bb5;
+}
