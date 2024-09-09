@@ -55,6 +55,16 @@ class FriendshipControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe NO_CONTENT
+
+      val getRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendships")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val getResult = route(app, getRequest).get
+
+      status(getResult) mustBe OK
+      val friends = contentAsJson(getResult).as[Seq[JsObject]]
+
+      val friendIds = friends.map(friend => (friend \ "friendId").as[Int])
+      friendIds must not contain 2
     }
 
     "return 404 Not Found when friendship doesn't exist" in {

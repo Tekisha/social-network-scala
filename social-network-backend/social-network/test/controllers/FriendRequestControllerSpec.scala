@@ -120,6 +120,13 @@ class FriendRequestControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe NO_CONTENT
+
+      val getRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendRequests/1")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val getResult = route(app, getRequest).get
+
+      status(getResult) mustBe NOT_FOUND
+      (contentAsJson(getResult) \ "message").as[String] mustBe "Friend request not found"
     }
 
     "return forbidden when trying to delete a request sent by another user" in {
