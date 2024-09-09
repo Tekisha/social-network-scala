@@ -47,7 +47,13 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
   }
 
   def getAllUsers: Action[AnyContent] = authAction.async { implicit request =>
-    userService.getAllUsers.map { users =>
+    val pageParam = request.getQueryString("page").map(_.trim)
+    val pageSizeParam = request.getQueryString("pageSize").map(_.trim)
+
+    val pageNum = pageParam.flatMap(p => scala.util.Try(p.toInt).toOption).getOrElse(1)
+    val pageSizeNum = pageSizeParam.flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
+
+    userService.getAllUsers(pageNum, pageSizeNum).map { users =>
       val userResponses = users.map(user => UserResponse(user.id, user.username))
       Ok(Json.toJson(userResponses))
     }
