@@ -22,9 +22,16 @@ class FriendshipRepository @Inject()(override protected val dbConfigProvider: Da
     db.run(friendships.filter(f => (f.userId1 === userId1 && f.userId2 === userId2) || (f.userId1 === userId2 && f.userId2 === userId1)).delete)
   }
 
-  def getFriends(userId: Int): Future[Seq[Friendship]] = {
-    db.run(friendships.filter(f => f.userId1 === userId || f.userId2 === userId).result)
+  def getFriends(userId: Int, offset: Int, limit: Int): Future[Seq[Friendship]] = {
+    db.run(
+      friendships
+        .filter(f => f.userId1 === userId || f.userId2 === userId)
+        .drop(offset)
+        .take(limit)
+        .result
+    )
   }
+
 
   def areFriends(userId1: Int, userId2: Int): Future[Boolean] = {
     db.run(friendships.filter(f => (f.userId1 === userId1 && f.userId2 === userId2) || (f.userId1 === userId2 && f.userId2 === userId1)).exists.result)

@@ -17,8 +17,14 @@ class FriendshipController @Inject()(cc: ControllerComponents, friendshipService
   implicit val friendshipFormat: OFormat[Friendship] = Json.format[Friendship]
 
   def getFriends: Action[AnyContent] = authAction.async { implicit request =>
+    val pageParam = request.getQueryString("page").map(_.trim)
+    val pageSizeParam = request.getQueryString("pageSize").map(_.trim)
+
+    val pageNum = pageParam.flatMap(p => scala.util.Try(p.toInt).toOption).getOrElse(1)
+    val pageSizeNum = pageSizeParam.flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
+
     val userId = request.userId
-    friendshipService.getFriends(userId).map { friends =>
+    friendshipService.getFriends(userId, pageNum, pageSizeNum).map { friends =>
       Ok(Json.toJson(friends))
     }
   }
