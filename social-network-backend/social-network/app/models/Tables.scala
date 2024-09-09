@@ -26,7 +26,7 @@ trait Tables { self: HasDatabaseConfigProvider[JdbcProfile] =>
     def createdAt = column[Timestamp]("created_at")
     def updatedAt = column[Timestamp]("updated_at")
 
-    def * = (id.?, userId, content, createdAt, updatedAt) <> (Post.tupled, Post.unapply)
+    def * = (id.?, userId, content, createdAt, updatedAt) <> ((Post.apply _).tupled, Post.unapply)
 
     def user = foreignKey("user_fk", userId, TableQuery[UserTable])(_.id)
   }
