@@ -94,8 +94,8 @@ class FriendRequestService @Inject()(
     }
   }
 
-  def findByUserId(userId: Int): Future[Seq[FriendRequestDetails]] = {
-    friendRequestRepository.findByUserId(userId).flatMap { friendRequests =>
+  def findByUserId(userId: Int, page: Int, pageSize: Int): Future[Seq[FriendRequestDetails]] = {
+    friendRequestRepository.findByUserId(userId, page, pageSize).flatMap { friendRequests =>
       Future.sequence(friendRequests.map { friendRequest =>
         for {
           requesterOpt <- userRepository.getUserById(friendRequest.requesterId)

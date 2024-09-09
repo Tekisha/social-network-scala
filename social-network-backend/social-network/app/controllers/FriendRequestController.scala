@@ -64,8 +64,14 @@ class FriendRequestController @Inject()(cc: ControllerComponents, friendRequestS
   }
 
   def getAllFriendRequests: Action[AnyContent] = authAction.async { implicit request =>
+    val pageParam = request.getQueryString("page").map(_.trim)
+    val pageSizeParam = request.getQueryString("pageSize").map(_.trim)
+
+    val pageNum = pageParam.flatMap(p => scala.util.Try(p.toInt).toOption).getOrElse(1)
+    val pageSizeNum = pageSizeParam.flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
+
     val userId = request.userId
-    friendRequestService.findByUserId(userId).map { friendRequests =>
+    friendRequestService.findByUserId(userId, pageNum, pageSizeNum).map { friendRequests =>
       Ok(Json.toJson(friendRequests))
     }
   }
