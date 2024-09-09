@@ -58,7 +58,13 @@ class PostController @Inject()(cc: ControllerComponents, postService: PostServic
   }
 
   def getAllPosts: Action[AnyContent] = authAction.async { implicit request =>
-    postService.getAllPosts.map { posts =>
+    val pageParam = request.getQueryString("page").map(_.trim)
+    val pageSizeParam = request.getQueryString("pageSize").map(_.trim)
+
+    val pageNum = pageParam.flatMap(p => scala.util.Try(p.toInt).toOption).getOrElse(1)
+    val pageSizeNum = pageSizeParam.flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
+
+    postService.getAllPosts(pageNum, pageSizeNum).map { posts =>
       Ok(Json.toJson(posts))
     }
   }

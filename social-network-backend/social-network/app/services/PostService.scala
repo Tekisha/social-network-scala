@@ -18,8 +18,8 @@ class PostService @Inject()(postRepository: PostRepository)(implicit ec: Executi
     postRepository.getPostById(id)
   }
 
-  def getAllPosts: Future[Seq[Post]] = {
-    postRepository.getAllPosts
+  def getAllPosts(page: Int, pageSize: Int): Future[Seq[Post]] = {
+    postRepository.getAllPosts(page, pageSize)
   }
 
   def getUserPosts(userId: Int, page: Int, pageSize: Int): Future[Seq[Post]] = {

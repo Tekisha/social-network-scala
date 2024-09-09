@@ -21,8 +21,9 @@ class PostRepository @Inject()(override protected val dbConfigProvider: Database
     db.run(posts.filter(_.id === id).result.headOption)
   }
 
-  def getAllPosts: Future[Seq[Post]] = {
-    db.run(posts.result)
+  def getAllPosts(page: Int, pageSize: Int): Future[Seq[Post]] = {
+    val offset = (page - 1) * pageSize
+    db.run(posts.drop(offset).take(pageSize).result)
   }
 
   def getUserPosts(userId: Int, page: Int, pageSize: Int): Future[Seq[Post]] = {
