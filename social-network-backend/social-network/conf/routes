@@ -33,5 +33,9 @@ GET     /friendRequests                     controllers.FriendRequestController.
 GET     /friendships                  controllers.FriendshipController.getFriends
 DELETE  /friendships/:friendId         controllers.FriendshipController.removeFriend(friendId: Int)
 
+# Like routes
+POST    /posts/:postId/like         controllers.LikeController.likePost(postId: Int)
+DELETE  /posts/:postId/unlike       controllers.LikeController.unlikePost(postId: Int)
+
 
 
