@@ -12,7 +12,7 @@ class FriendshipControllerSpec extends TestBase {
     "successfully return a list of friends" in {
       val token = getTokenForTestUser("testuser1", "password123")
 
-      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendships")
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendships?")
         .withHeaders("Authorization" -> s"Bearer $token")
       val result = route(app, request).get
 
@@ -26,7 +26,7 @@ class FriendshipControllerSpec extends TestBase {
     }
 
     "return 401 Unauthorized when no token is provided" in {
-      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendships")
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendships?")
       val result = route(app, request).get
 
       status(result) mustBe UNAUTHORIZED
@@ -35,7 +35,7 @@ class FriendshipControllerSpec extends TestBase {
     "return empty list if user has no friends" in {
       val token = getTokenForTestUser("existinguser", "password789")
 
-      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendships")
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendships?")
         .withHeaders("Authorization" -> s"Bearer $token")
       val result = route(app, request).get
 
