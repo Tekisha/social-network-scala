@@ -57,4 +57,43 @@ class LikeControllerSpec extends TestBase {
       (contentAsJson(result) \ "message").as[String] mustBe "Not liked yet"
     }
   }
+
+  "LikeController GET post with like count and liked by me status" should {
+
+    "return correct like count and liked by me status" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+
+      val likeRequest = FakeRequest(POST, "/posts/2/like")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      route(app, likeRequest).get
+
+      val getRequest = FakeRequest(GET, "/posts/2")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val getResult = route(app, getRequest).get
+
+      status(getResult) mustBe OK
+      (contentAsJson(getResult) \ "likeCount").as[Int] mustBe 2
+      (contentAsJson(getResult) \ "likedByMe").as[Boolean] mustBe true
+    }
+
+    "return correct like count and liked by me status after unlike" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+
+      val unlikeRequest = FakeRequest(DELETE, "/posts/1/unlike")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val unlikeResult = route(app, unlikeRequest).get
+
+      status(unlikeResult) mustBe NO_CONTENT
+
+      val getRequest = FakeRequest(GET, "/posts/1")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val getResult = route(app, getRequest).get
+
+      println(contentAsJson(getResult))
+
+      status(getResult) mustBe OK
+      (contentAsJson(getResult) \ "likeCount").as[Int] mustBe 0
+      (contentAsJson(getResult) \ "likedByMe").as[Boolean] mustBe false
+    }
+  }
 }
