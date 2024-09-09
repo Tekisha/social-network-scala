@@ -96,7 +96,7 @@ class PostControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe OK
-      (contentAsJson(result) \ "content").as[String] mustBe "This is the first post by testuser1"
+      (contentAsJson(result) \ "post" \ "content").as[String] mustBe "This is the first post by testuser1"
     }
 
     "return 404 for non-existent post ID" in {
@@ -124,7 +124,7 @@ class PostControllerSpec extends TestBase {
       val posts = contentAsJson(result).as[Seq[JsObject]]
 
       posts.nonEmpty mustBe true
-      val contents = posts.map(post => (post \ "content").as[String])
+      val contents = posts.map(post => (post \ "post" \ "content").as[String])
 
       contents must contain allOf (
         "This is the first post by testuser1",
@@ -154,7 +154,7 @@ class PostControllerSpec extends TestBase {
       val posts = contentAsJson(result).as[Seq[JsObject]]
 
       posts.nonEmpty mustBe true
-      val contents = posts.map(post => (post \ "content").as[String])
+      val contents = posts.map(post => (post \ "post" \ "content").as[String])
 
       contents must contain("This is the first post by testuser1")
       contents must not contain("This is the first post by testuser2")
