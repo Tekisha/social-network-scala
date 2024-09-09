@@ -49,3 +49,23 @@
     font-weight: 600;
     color: #333;
 }
+
+.create-post-textarea {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    transition: background-color 0.3s, border-color 0.3s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    resize: none;
+}
+
+.create-post-textarea:focus {
+    border-color: #0095f6;
+    outline: none;
+}
+
+.create-post-textarea:hover {
+    background-color: #f5f8fa;
+}
