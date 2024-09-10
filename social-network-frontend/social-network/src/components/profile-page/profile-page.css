@@ -34,20 +34,36 @@
 
 .user-info {
     display: flex;
-    flex-direction: column;
+    align-items: center; /* Align username and button horizontally */
 }
 
 .username {
     font-size: 2rem;
     font-weight: bold;
+    margin-right: 1rem; /* Add space between username and button */
     color: #333;
-    margin-bottom: 0.5rem;
+}
+
+.edit-button, .friend-button {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #0095f6;
+    color: white;
+    margin-left: 1rem; /* Add space between username and button */
+}
+
+.edit-button:hover, .friend-button:hover {
+    background-color: #007bb5;
 }
 
 .bio, .email {
     font-size: 1rem;
     color: #555;
     margin: 0.2rem 0;
+    max-width: 500px; /* Ensures bio and email stay within reasonable width */
 }
 
 .section-title {
@@ -63,7 +79,6 @@
     gap: 1.5rem;
 }
 
-/* Spinner for loading */
 .spinner {
     border: 4px solid rgba(0, 0, 0, 0.1);
     border-left-color: #0095f6;
@@ -77,3 +92,4 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+

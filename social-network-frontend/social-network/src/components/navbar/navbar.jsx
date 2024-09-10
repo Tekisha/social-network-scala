@@ -1,11 +1,17 @@
 import React from 'react';
 import './Navbar.css';
 import logo from '/src/assets/logo.png';
+import {useLocation} from "react-router-dom";
 
-function Navbar() {
+function Navbar({ loggedInUserId }) {
+
+    const location = useLocation();
 
     const getActiveClass = (path) => {
-        return window.location.pathname === path ? "active-nav-item" : "";
+        if (path === "/profile" && location.pathname.includes(`/profile/${loggedInUserId}`)) {
+            return "active-nav-item";
+        }
+        return location.pathname === path ? "active-nav-item" : "";
     };
     
     return (
@@ -16,7 +22,8 @@ function Navbar() {
                 </div>
                 <nav>
                     <a href="/home" className={getActiveClass("/home")}><i className="fas fa-home"></i> Home</a>
-                    <a href="/profile" className={getActiveClass("/profile")}><i className="fas fa-user"></i> Profile</a>
+                    <a href={`/profile/${loggedInUserId}`} className={getActiveClass("/profile")}><i
+                        className="fas fa-user"></i> Profile</a>
                     <a href="/search" className={getActiveClass("/search")}><i className="fas fa-search"></i> Search</a>
                     <a href="/login"><i className="fas fa-sign-out-alt"></i> Logout</a>
                 </nav>

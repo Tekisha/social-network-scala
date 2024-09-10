@@ -12,7 +12,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/home" element={<MainPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/profile/:viewedUserId" element={<ProfilePage />} />
                 <Route path="*" element={<Login />} /> {/* Default route */}
             </Routes>
         </Router>
