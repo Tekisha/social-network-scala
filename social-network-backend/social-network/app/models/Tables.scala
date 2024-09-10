@@ -15,8 +15,9 @@ trait Tables { self: HasDatabaseConfigProvider[JdbcProfile] =>
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def username = column[String]("username", O.Length(255), O.Unique)
     def password = column[String]("password")
+    def profilePhoto = column[Option[String]]("profile_photo", O.Default(Some("/images/default.png")))
 
-    override def * = (id.?, username, password) <> (User.tupled, User.unapply)
+    override def * = (id.?, username, password, profilePhoto) <> (User.tupled, User.unapply)
   }
 
   class PostTable(tag: Tag) extends Table[Post](tag, "posts") {
