@@ -42,7 +42,11 @@ class PostControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe OK
-      (contentAsJson(result) \ "message").as[String] mustBe "Post updated successfully"
+      val jsonResponse = contentAsJson(result)
+
+      (jsonResponse \ "post" \ "content").as[String] mustBe "This is an updated post"
+      (jsonResponse \ "likedByMe").as[Boolean] mustBe true
+      (jsonResponse \ "likeCount").as[Int] mustBe 1
     }
 
     "return forbidden when trying to update a post of another user" in {

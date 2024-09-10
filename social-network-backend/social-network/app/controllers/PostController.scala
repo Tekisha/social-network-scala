@@ -23,7 +23,7 @@ class PostController @Inject()(cc: ControllerComponents, postService: PostServic
   def createPost: Action[CreatePostData] = authAction.async(parse.json[CreatePostData]) { implicit request =>
     val userId = request.userId
     val postData = request.body
-    postService.createPostWithLikes(userId, postData.content).map { postWithLikes =>
+    postService.createPost(userId, postData.content).map { postWithLikes =>
       Created(Json.toJson(postWithLikes))
     }
   }
@@ -32,7 +32,7 @@ class PostController @Inject()(cc: ControllerComponents, postService: PostServic
     val userId = request.userId
     val postData = request.body
     postService.updatePost(postId, userId, postData.content).map {
-      case Right(_) => Ok(Json.obj("message" -> "Post updated successfully"))
+      case Right(postWithLikes) => Ok(Json.toJson(postWithLikes))
       case Left(errorMessage) => Forbidden(Json.obj("message" -> errorMessage))
     }
   }
