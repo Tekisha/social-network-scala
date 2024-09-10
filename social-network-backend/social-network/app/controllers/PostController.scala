@@ -79,4 +79,18 @@ class PostController @Inject()(cc: ControllerComponents, postService: PostServic
       case None => NotFound(Json.obj("message" -> "Post not found"))
     }
   }
+
+  def getFriendsPosts: Action[AnyContent] = authAction.async { implicit request =>
+    val pageParam = request.getQueryString("page").map(_.trim)
+    val pageSizeParam = request.getQueryString("pageSize").map(_.trim)
+
+    val pageNum = pageParam.flatMap(p => scala.util.Try(p.toInt).toOption).getOrElse(1)
+    val pageSizeNum = pageSizeParam.flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
+
+    val userId = request.userId
+
+    postService.getFriendsPosts(userId, pageNum, pageSizeNum).map { posts =>
+      Ok(Json.toJson(posts))
+    }
+  }
 }

@@ -27,6 +27,10 @@ class PostService @Inject()(postRepository: PostRepository)(implicit ec: Executi
     postRepository.getUserPostsWithLikes(userId, page, pageSize)
   }
 
+  def getFriendsPosts(userId: Int, page: Int, pageSize: Int): Future[Seq[PostWithLikes]] = {
+    postRepository.getFriendsPostsWithLikes(userId, page, pageSize)
+  }
+
   def updatePost(postId: Int, userId: Int, content: String): Future[Either[String, Int]] = {
     postRepository.getPostById(postId).flatMap {
       case Some(post) if post.userId == userId =>
