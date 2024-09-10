@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar from '../navbar/navbar.jsx';
 import Post from '../post/post.jsx';
+import UsersList from '../user-list/user-list.jsx';
 import './profile-page.css';
 import { useParams } from "react-router-dom";
 
@@ -24,6 +25,8 @@ function ProfilePage() {
         isFriend: false,
     });
     const [posts, setPosts] = useState([]);
+    const [friends, setFriends] = useState([]);
+    const [showFriendsModal, setShowFriendsModal] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const token = mockToken;
@@ -33,7 +36,6 @@ function ProfilePage() {
     useEffect(() => {
         setLoading(true);
 
-        // Fetch user information (mocked here)
         setTimeout(() => {
             const dummyUserInfo = {
                 userId: viewedUserId,
@@ -50,10 +52,18 @@ function ProfilePage() {
                 isFriend
             });
 
+            if (isCurrentUser) {
+                const dummyFriends = [
+                    { id: 1, username: "Friend1", profilePic: "/src/assets/user-icon.png" },
+                    { id: 2, username: "Friend2", profilePic: "/src/assets/user-icon.png" },
+                    { id: 3, username: "Friend3", profilePic: "/src/assets/user-icon.png" }
+                ];
+                setFriends(dummyFriends);
+            }
+
             setLoading(false);
         }, 1000);
 
-        // Fetch user posts (mocked here)
         setTimeout(() => {
             const userPosts = [
                 {
@@ -95,14 +105,23 @@ function ProfilePage() {
         setUserInfo({ ...userInfo, isFriend: false });
     };
 
+    const toggleFriendsModal = () => {
+        setShowFriendsModal(!showFriendsModal); // Toggle the modal
+    };
+
     return (
         <div className="profile-page-wrapper">
             <Navbar loggedInUserId={loggedInUserId} />
             <div className="profile-page-container">
                 <div className="profile-header">
-                    <img src={userInfo.profilePic} alt="Profile" className="profile-pic" />
+                    <img src={userInfo.profilePic} alt="Profile" className="profile-pic"/>
                     <div className="user-info">
                         <h2 className="username">{userInfo.username}</h2>
+                        {userInfo.isCurrentUser && (
+                            <button className="view-friends-button" onClick={toggleFriendsModal}>
+                                View Friends
+                            </button>
+                        )}
                         {userInfo.isCurrentUser ? (
                             <button className="edit-button">
                                 <i className="fas fa-edit"></i> Edit Profile
@@ -119,6 +138,18 @@ function ProfilePage() {
                     </div>
                 </div>
 
+                {showFriendsModal && (
+                    <div className="friends-modal-overlay" onClick={toggleFriendsModal}>
+                        <div className="friends-modal" onClick={(e) => e.stopPropagation()}>
+                            <button className="close-modal-button" onClick={toggleFriendsModal}>
+                                <i className="fas fa-times"></i>
+                            </button>
+                            <UsersList title="Friends" users={friends} closeModal={toggleFriendsModal} />
+                        </div>
+                    </div>
+                )}
+
+
                 <h3 className="section-title">Posts</h3>
                 <div className="user-posts">
                     {loading ? (
@@ -126,7 +157,7 @@ function ProfilePage() {
                     ) : (
                         userInfo.isFriend || userInfo.isCurrentUser ? (
                             posts.map(post => (
-                                <Post key={post.id} post={post} handleLike={handleLike} />
+                                <Post key={post.id} post={post} handleLike={handleLike}/>
                             ))
                         ) : (
                             <p key="become-friends">Become friends to see posts!</p>
