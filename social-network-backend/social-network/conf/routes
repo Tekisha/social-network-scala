@@ -13,6 +13,7 @@ PUT     /users                   controllers.UserController.updateUser
 DELETE  /users                   controllers.UserController.deleteUser
 POST    /register                controllers.UserController.register
 POST    /login                   controllers.UserController.login
+POST    /users/profile-photo     controllers.UserController.changeProfilePhoto
 
 # Post routes
 POST    /posts                   controllers.PostController.createPost

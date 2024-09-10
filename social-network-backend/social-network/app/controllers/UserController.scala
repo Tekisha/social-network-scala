@@ -10,6 +10,8 @@ import services.UserService
 import actions.AuthAction
 import java.sql.SQLIntegrityConstraintViolationException
 import exceptions.UsernameAlreadyExistsException
+import play.api.libs.Files.TemporaryFile
+import java.nio.file.{Files, Path, Paths}
 
 @Singleton
 class UserController @Inject()(cc: ControllerComponents, userService: UserService, authAction: AuthAction)(implicit ec: ExecutionContext) extends AbstractController(cc) {
@@ -17,7 +19,7 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
   implicit val userFormat: OFormat[User] = Json.format[User]
 
   // User response that omits sensitive fields like passwordHash
-  case class UserResponse(id: Option[Int], username: String)
+  case class UserResponse(id: Option[Int], username: String, profilePhoto: Option[String])
   implicit val userResponseFormat: OFormat[UserResponse] = Json.format[UserResponse]
 
   // Case classes for registration and login data
@@ -30,7 +32,7 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
   def register: Action[RegistrationData] = Action.async(parse.json[RegistrationData]) { implicit request =>
     val registrationData = request.body
     userService.registerUser(registrationData.username, registrationData.password).map { createdUser =>
-      val response = UserResponse(createdUser.id, createdUser.username)
+      val response = UserResponse(createdUser.id, createdUser.username, createdUser.profilePhoto)
       Created(Json.toJson(response))
     }.recover {
       case ex: UsernameAlreadyExistsException =>
@@ -54,14 +56,14 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
     val pageSizeNum = pageSizeParam.flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
 
     userService.getAllUsers(pageNum, pageSizeNum).map { users =>
-      val userResponses = users.map(user => UserResponse(user.id, user.username))
+      val userResponses = users.map(user => UserResponse(user.id, user.username, user.profilePhoto))
       Ok(Json.toJson(userResponses))
     }
   }
 
   def getUserById(id: Int): Action[AnyContent] = authAction.async { implicit request =>
     userService.getUserById(id).map {
-      case Some(user) => Ok(Json.toJson(UserResponse(user.id, user.username)))
+      case Some(user) => Ok(Json.toJson(UserResponse(user.id, user.username, user.profilePhoto)))
       case None => NotFound(Json.obj("message" -> s"User with id $id not found"))
     }
   }
@@ -75,7 +77,7 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
         Ok(Json.obj(
           "message" -> "User updated successfully",
           "token" -> newToken,
-          "user" -> Json.toJson(UserResponse(updatedUser.id, updatedUser.username))
+          "user" -> Json.toJson(UserResponse(updatedUser.id, updatedUser.username, updatedUser.profilePhoto))
         ))
       case Left(errorMessage) =>
         Conflict(Json.obj("message" -> errorMessage))
@@ -91,4 +93,17 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
     }
   }
 
+  def changeProfilePhoto: Action[MultipartFormData[TemporaryFile]] = authAction.async(parse.multipartFormData) { implicit request =>
+    val userId = request.userId
+    request.body.file("profile_photo").map { photo =>
+      val extension = Paths.get(photo.filename).getFileName.toString.split("\\.").lastOption.getOrElse("jpg")
+      val filename = s"$userId.$extension"
+
+      userService.updateProfilePhoto(userId, photo.ref, filename).map { _ =>
+        Ok(Json.obj("message" -> "Profile photo updated successfully"))
+      }
+    }.getOrElse {
+      Future.successful(BadRequest(Json.obj("message" -> "Missing file")))
+    }
+  }
 }
