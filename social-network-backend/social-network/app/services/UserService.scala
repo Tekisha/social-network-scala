@@ -70,7 +70,7 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
     val filePath = s"public/images/users/$filename"
     saveProfilePhoto(photo, filePath)
 
-    userRepository.updateProfilePhoto(userId, s"/public/images/users/$filename").map(_ => ())
+    userRepository.updateProfilePhoto(userId, s"/assets/images/users/$filename").map(_ => ())
   }
 
   private def performUserUpdate(id: Int, user: User, existingUser: User): Future[Either[String, (User, String)]] = {
