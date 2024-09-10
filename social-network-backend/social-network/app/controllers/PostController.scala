@@ -64,13 +64,17 @@ class PostController @Inject()(cc: ControllerComponents, postService: PostServic
     val pageNum = pageParam.flatMap(p => scala.util.Try(p.toInt).toOption).getOrElse(1)
     val pageSizeNum = pageSizeParam.flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
 
-    postService.getAllPosts(pageNum, pageSizeNum).map { posts =>
+    val userId = request.userId
+
+    postService.getAllPosts(userId, pageNum, pageSizeNum).map { posts =>
       Ok(Json.toJson(posts))
     }
   }
 
   def getPostById(postId: Int): Action[AnyContent] = authAction.async { implicit request =>
-    postService.getPostById(postId).map {
+    val userId = request.userId
+
+    postService.getPostById(userId, postId).map {
       case Some(post) => Ok(Json.toJson(post))
       case None => NotFound(Json.obj("message" -> "Post not found"))
     }

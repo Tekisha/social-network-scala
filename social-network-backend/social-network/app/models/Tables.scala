@@ -26,7 +26,7 @@ trait Tables { self: HasDatabaseConfigProvider[JdbcProfile] =>
     def createdAt = column[Timestamp]("created_at")
     def updatedAt = column[Timestamp]("updated_at")
 
-    def * = (id.?, userId, content, createdAt, updatedAt) <> (Post.tupled, Post.unapply)
+    def * = (id.?, userId, content, createdAt, updatedAt) <> ((Post.apply _).tupled, Post.unapply)
 
     def user = foreignKey("user_fk", userId, TableQuery[UserTable])(_.id)
   }
@@ -55,8 +55,23 @@ trait Tables { self: HasDatabaseConfigProvider[JdbcProfile] =>
     def user2 = foreignKey("user2_fk", userId2, TableQuery[UserTable])(_.id)
   }
 
+  class LikeTable(tag: Tag) extends Table[Like](tag, "likes") {
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+    def userId = column[Int]("user_id")
+    def postId = column[Int]("post_id")
+    def createdAt = column[Timestamp]("created_at", O.Default(new Timestamp(System.currentTimeMillis())))
+
+    def * = (id.?, userId, postId, createdAt) <> (Like.tupled, Like.unapply)
+
+    def user = foreignKey("user_fk", userId, TableQuery[UserTable])(_.id, onDelete = ForeignKeyAction.Cascade)
+    def post = foreignKey("post_fk", postId, TableQuery[PostTable])(_.id, onDelete = ForeignKeyAction.Cascade)
+
+    def uniqueUserPost = index("unique_user_post", (userId, postId), unique = true)
+  }
+
   protected val users = TableQuery[UserTable]
   protected val posts = TableQuery[PostTable]
   protected val friendRequests = TableQuery[FriendRequestTable]
   protected val friendships = TableQuery[FriendshipTable]
+  protected val likes = TableQuery[LikeTable]
 }

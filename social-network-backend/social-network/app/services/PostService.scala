@@ -3,6 +3,7 @@ package services
 import javax.inject.{Inject, Singleton}
 import models.Post
 import repositories.PostRepository
+import dtos.PostWithLikes
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -14,16 +15,16 @@ class PostService @Inject()(postRepository: PostRepository)(implicit ec: Executi
     postRepository.createPost(post)
   }
 
-  def getPostById(id: Int): Future[Option[Post]] = {
-    postRepository.getPostById(id)
+  def getPostById(userId: Int, postId: Int): Future[Option[PostWithLikes]] = {
+    postRepository.getPostWithLikes(userId, postId)
   }
 
-  def getAllPosts(page: Int, pageSize: Int): Future[Seq[Post]] = {
-    postRepository.getAllPosts(page, pageSize)
+  def getAllPosts(userId: Int, page: Int, pageSize: Int): Future[Seq[PostWithLikes]] = {
+    postRepository.getAllPostsWithLikes(userId, page, pageSize)
   }
 
-  def getUserPosts(userId: Int, page: Int, pageSize: Int): Future[Seq[Post]] = {
-    postRepository.getUserPosts(userId, page, pageSize)
+  def getUserPosts(userId: Int, page: Int, pageSize: Int): Future[Seq[PostWithLikes]] = {
+    postRepository.getUserPostsWithLikes(userId, page, pageSize)
   }
 
   def updatePost(postId: Int, userId: Int, content: String): Future[Either[String, Int]] = {
