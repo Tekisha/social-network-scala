@@ -48,6 +48,7 @@ class PostRepository @Inject()(override protected val dbConfigProvider: Database
     FROM posts p
     LEFT JOIN likes l ON p.id = l.post_id
     GROUP BY p.id, p.user_id, p.content, p.created_at, p.updated_at
+    ORDER BY p.created_at DESC
     LIMIT $pageSize OFFSET $offset
   """.as[(Int, Int, String, Timestamp, Timestamp, Int, Boolean)]
 
@@ -70,6 +71,7 @@ class PostRepository @Inject()(override protected val dbConfigProvider: Database
     LEFT JOIN likes l ON p.id = l.post_id
     WHERE p.user_id = $userId
     GROUP BY p.id, p.user_id, p.content, p.created_at, p.updated_at
+    ORDER BY p.created_at DESC
     LIMIT $pageSize OFFSET $offset
   """.as[(Int, Int, String, Timestamp, Timestamp, Int, Boolean)]
 
