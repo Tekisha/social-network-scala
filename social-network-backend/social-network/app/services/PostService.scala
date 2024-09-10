@@ -10,9 +10,11 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class PostService @Inject()(postRepository: PostRepository)(implicit ec: ExecutionContext) {
 
-  def createPost(userId: Int, content: String): Future[Post] = {
+  def createPostWithLikes(userId: Int, content: String): Future[PostWithLikes] = {
     val post = Post(None, userId, content, new java.sql.Timestamp(System.currentTimeMillis()), new java.sql.Timestamp(System.currentTimeMillis()))
-    postRepository.createPost(post)
+    postRepository.createPost(post).flatMap { createdPost =>
+      postRepository.getPostWithLikes(userId, createdPost.id.get).map(_.get)
+    }
   }
 
   def getPostById(userId: Int, postId: Int): Future[Option[PostWithLikes]] = {

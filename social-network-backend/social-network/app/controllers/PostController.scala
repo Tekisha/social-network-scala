@@ -23,8 +23,8 @@ class PostController @Inject()(cc: ControllerComponents, postService: PostServic
   def createPost: Action[CreatePostData] = authAction.async(parse.json[CreatePostData]) { implicit request =>
     val userId = request.userId
     val postData = request.body
-    postService.createPost(userId, postData.content).map { post =>
-      Created(Json.toJson(post))
+    postService.createPostWithLikes(userId, postData.content).map { postWithLikes =>
+      Created(Json.toJson(postWithLikes))
     }
   }
 

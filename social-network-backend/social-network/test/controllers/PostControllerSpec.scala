@@ -17,7 +17,9 @@ class PostControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe CREATED
-      (contentAsJson(result) \ "content").as[String] mustBe "This is a test post"
+      (contentAsJson(result) \ "post" \ "content").as[String] mustBe "This is a test post"
+      (contentAsJson(result) \ "likeCount").as[Int] mustBe 0
+      (contentAsJson(result) \ "likedByMe").as[Boolean] mustBe false
     }
 
     "fail to create a post when not authenticated" in {
