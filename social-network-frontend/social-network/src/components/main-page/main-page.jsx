@@ -19,6 +19,7 @@ function MainPage() {
                     likes: 10,
                     likedByMe: false,
                     timestamp: new Date().toISOString(),
+                    comments: 2,
                 },
                 {
                     id: 2,
@@ -27,6 +28,7 @@ function MainPage() {
                     likes: 5,
                     likedByMe: true,
                     timestamp: new Date().toISOString(),
+                    comments: 4,
                 },
             ];
             setPosts(dummyPosts);

@@ -48,15 +48,7 @@
     align-self: flex-start;
 }
 
-/* Post Content Styling */
-.post-content {
-    font-size: 1.1rem;
-    color: #555;
-    margin-bottom: 1rem;
-    line-height: 1.6;
-}
-
-/* Post Actions (Like Button and Count) */
+/* Post Actions (Like and Comment Buttons) */
 .post-actions {
     display: flex;
     align-items: center;
@@ -64,7 +56,8 @@
     margin-top: 0.75rem;
 }
 
-.like-button {
+.like-button,
+.comment-button {
     display: flex;
     align-items: center;
     cursor: pointer;
@@ -76,7 +69,8 @@
     transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-.like-button:hover {
+.like-button:hover,
+.comment-button:hover {
     color: #007bb5;
     background-color: #e0f1ff;
     transform: translateY(-2px);
@@ -87,11 +81,13 @@
     background-color: #e6f6ff;
 }
 
-.like-button i {
+.like-button i,
+.comment-button i {
     margin-right: 0.5rem;
 }
 
-.like-count {
+.like-count,
+.comment-count {
     font-size: 1rem;
     color: #333;
 }

@@ -23,6 +23,10 @@ function Post({ post, handleLike }) {
                     <i className="fas fa-thumbs-up"></i>
                     <span className="like-count">{post.likes}</span>
                 </div>
+                <div className="comment-button">
+                    <i className="fas fa-comment"></i>
+                    <span className="comment-count">{post.comments}</span>
+                </div>
             </div>
         </div>
     );
