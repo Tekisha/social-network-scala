@@ -17,7 +17,9 @@ class PostControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe CREATED
-      (contentAsJson(result) \ "content").as[String] mustBe "This is a test post"
+      (contentAsJson(result) \ "post" \ "content").as[String] mustBe "This is a test post"
+      (contentAsJson(result) \ "likeCount").as[Int] mustBe 0
+      (contentAsJson(result) \ "likedByMe").as[Boolean] mustBe false
     }
 
     "fail to create a post when not authenticated" in {
@@ -40,7 +42,11 @@ class PostControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe OK
-      (contentAsJson(result) \ "message").as[String] mustBe "Post updated successfully"
+      val jsonResponse = contentAsJson(result)
+
+      (jsonResponse \ "post" \ "content").as[String] mustBe "This is an updated post"
+      (jsonResponse \ "likedByMe").as[Boolean] mustBe true
+      (jsonResponse \ "likeCount").as[Int] mustBe 1
     }
 
     "return forbidden when trying to update a post of another user" in {
@@ -177,6 +183,75 @@ class PostControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe UNAUTHORIZED
+    }
+  }
+
+  "PostController GET getFriendsPosts" should {
+
+    "return a list of friends' posts with correct like count and likedByMe status" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/posts/friends")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val result = route(app, request).get
+
+      status(result) mustBe OK
+      val posts = contentAsJson(result).as[Seq[JsObject]]
+
+      posts.nonEmpty mustBe true
+      val contents = posts.map(post => (post \ "post" \ "content").as[String])
+      val likeCounts = posts.map(post => (post \ "likeCount").as[Int])
+      val likedByMeStatuses = posts.map(post => (post \ "likedByMe").as[Boolean])
+
+      contents must contain("This is the first post by testuser2")
+
+      likeCounts.foreach(_ must be >= 0)
+      likedByMeStatuses.foreach(_ mustBe false)
+    }
+
+    "return empty list when the user has no friends' posts" in {
+      val token = getTokenForTestUser("existingUser", "password789")
+
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/posts/friends")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val result = route(app, request).get
+
+      status(result) mustBe OK
+      val posts = contentAsJson(result).as[Seq[JsObject]]
+      posts.isEmpty mustBe true
+    }
+
+    "return 401 Unauthorized when no token is provided" in {
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/posts/friends")
+      val result = route(app, request).get
+
+      status(result) mustBe UNAUTHORIZED
+    }
+
+    "return correct posts with like count and likedByMe status when a post is liked" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+
+      val likeRequest = FakeRequest(POST, "/posts/2/like")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val likeResult = route(app, likeRequest).get
+
+      status(likeResult) mustBe CREATED
+
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/posts/friends")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val result = route(app, request).get
+
+      status(result) mustBe OK
+      val posts = contentAsJson(result).as[Seq[JsObject]]
+
+      posts.nonEmpty mustBe true
+      val contents = posts.map(post => (post \ "post" \ "content").as[String])
+      val likeCounts = posts.map(post => (post \ "likeCount").as[Int])
+      val likedByMeStatuses = posts.map(post => (post \ "likedByMe").as[Boolean])
+
+      contents must contain("This is the first post by testuser2")
+      likeCounts.head mustBe 2
+      likedByMeStatuses.head mustBe true
     }
   }
 }

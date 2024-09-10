@@ -20,6 +20,7 @@ PUT     /posts/:postId           controllers.PostController.updatePost(postId: I
 DELETE  /posts/:postId           controllers.PostController.deletePost(postId: Int)
 GET     /posts/user/:userId      controllers.PostController.getUserPosts(userId: Int)
 GET     /posts                   controllers.PostController.getAllPosts
+GET     /posts/friends           controllers.PostController.getFriendsPosts
 GET     /posts/:postId           controllers.PostController.getPostById(postId: Int)
 
 # Friend request routes
