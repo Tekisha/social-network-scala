@@ -159,12 +159,7 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
         NotFound(Json.obj("message" -> "No users found"))
       } else {
         val userResponses = paginatedUsers.map(user => UserResponse(user.id, user.username, user.profilePhoto))
-        Ok(Json.obj(
-          "total" -> totalUsers,
-          "page" -> pageNum,
-          "pageSize" -> pageSizeNum,
-          "users" -> Json.toJson(userResponses)
-        ))
+        Ok(Json.toJson(userResponses))
       }
     }
   }

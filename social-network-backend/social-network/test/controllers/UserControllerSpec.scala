@@ -334,8 +334,7 @@ class UserControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe OK
-      val jsonResponse = contentAsJson(result)
-      val users = (jsonResponse \ "users").as[Seq[JsObject]]
+      val users = contentAsJson(result).as[Seq[JsObject]]
       users.nonEmpty mustBe true
     }
 
