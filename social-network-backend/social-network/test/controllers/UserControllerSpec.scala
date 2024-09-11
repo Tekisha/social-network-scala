@@ -1,9 +1,13 @@
 import base.TestBase
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import play.api.test.{FakeRequest, Injecting}
+import play.api.test.{FakeRequest, Injecting, FakeHeaders}
 import play.api.mvc.{AnyContentAsEmpty, Headers}
 import play.api.libs.json.{Json, JsObject}
+import play.api.libs.Files.TemporaryFile
+import play.api.libs.Files.TemporaryFileCreator
+import play.api.mvc.MultipartFormData
+import play.api.http.Writeable
 
 class UserControllerSpec extends TestBase {
 
@@ -178,6 +182,48 @@ class UserControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe UNAUTHORIZED
+    }
+  }
+
+  "UserController POST changeProfilePhoto" should {
+
+    "successfully change profile photo when authenticated and a valid file is provided" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+      val formData = createMultipartFormData("profile", "jpg")
+      val request = createPhotoUploadRequest(Some(token), formData)
+
+      val result = route(app, request).get
+      status(result) mustBe OK
+      (contentAsJson(result) \ "message").as[String] mustBe "Profile photo updated successfully"
+    }
+
+    "return 400 BadRequest when no file is provided" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+      val formData = MultipartFormData[TemporaryFile](dataParts = Map.empty, files = Seq.empty, badParts = Seq.empty)
+      val request = createPhotoUploadRequest(Some(token), formData)
+
+      val result = route(app, request).get
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "message").as[String] mustBe "Missing file"
+    }
+
+    "return 400 BadRequest when the file is of unsupported type" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+      val formData = createMultipartFormData("profile", "txt")
+      val request = createPhotoUploadRequest(Some(token), formData)
+
+      val result = route(app, request).get
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "message").as[String] mustBe "Invalid file type. Only jpg and png are allowed."
+    }
+
+    "return 401 Unauthorized when no token is provided" in {
+      val formData = createMultipartFormData("profile", "jpg")
+      val request = createPhotoUploadRequest(None, formData)
+
+      val result = route(app, request).get
+      status(result) mustBe UNAUTHORIZED
+      (contentAsJson(result) \ "message").as[String] mustBe "Invalid or missing token"
     }
   }
 }

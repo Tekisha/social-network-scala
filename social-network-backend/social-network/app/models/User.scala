@@ -1,3 +1,3 @@
 package models
 
-case class User(id: Option[Int], username: String, password: String)
+case class User(id: Option[Int], username: String, password: String, profilePhoto: Option[String])

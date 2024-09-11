@@ -46,4 +46,8 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
   def deleteAllUsers(): Future[Int] = {
     db.run(users.delete)
   }
+
+  def updateProfilePhoto(userId: Int, filePath: String): Future[Int] = {
+    db.run(users.filter(_.id === userId).map(_.profilePhoto).update(Some(filePath)))
+  }
 }

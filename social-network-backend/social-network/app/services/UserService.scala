@@ -7,6 +7,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import utils.JwtUtils
 import exceptions.UsernameAlreadyExistsException
 import utils.PasswordUtils
+import play.api.libs.Files.TemporaryFile
+import java.nio.file.{Files, Path, Paths}
 
 @Singleton
 class UserService @Inject() (userRepository: UserRepository)(implicit ec: ExecutionContext) {
@@ -16,7 +18,7 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
       case Some(_) => Future.failed(new UsernameAlreadyExistsException())
       case None =>
         val hashedPassword = PasswordUtils.hashPassword(password)
-        val newUser = User(None, username, hashedPassword)
+        val newUser = User(None, username, hashedPassword, None)
         userRepository.createNewUser(newUser)
     }
   }
@@ -64,6 +66,13 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
     }
   }
 
+  def updateProfilePhoto(userId: Int, photo: TemporaryFile, filename: String): Future[Unit] = {
+    val filePath = s"public/images/users/$filename"
+    saveProfilePhoto(photo, filePath)
+
+    userRepository.updateProfilePhoto(userId, s"/assets/images/users/$filename").map(_ => ())
+  }
+
   private def performUserUpdate(id: Int, user: User, existingUser: User): Future[Either[String, (User, String)]] = {
     val updatedUser = prepareUpdatedUser(id, user, existingUser)
 
@@ -87,5 +96,11 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
   private def generateUpdatedToken(user: User): Either[String, (User, String)] = {
     val newToken = JwtUtils.createToken(user.id.get, user.username, expirationPeriodInDays = 7)
     Right((user, newToken))
+  }
+
+  private def saveProfilePhoto(photo: TemporaryFile, filePath: String): Unit = {
+    val path: Path = Paths.get(filePath)
+    Files.createDirectories(path.getParent)
+    photo.moveTo(path, replace = true)
   }
 }
