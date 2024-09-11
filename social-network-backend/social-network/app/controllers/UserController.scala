@@ -100,8 +100,6 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
       val extension = Paths.get(photo.filename).getFileName.toString.split("\\.").lastOption.getOrElse("jpg")
       val fileSize = photo.fileSize
 
-      println(s"File size: ${fileSize}")
-
       if (!FileUtils.isValidExtension(photo.filename)) {
         Future.successful(BadRequest(Json.obj("message" -> "Invalid file type. Only jpg and png are allowed.")))
       } else if (!FileUtils.isValidSize(fileSize)) {
