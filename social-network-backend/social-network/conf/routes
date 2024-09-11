@@ -8,6 +8,7 @@ GET     /assets/*file               controllers.Assets.versioned(path="/public",
 
 # User routes
 GET     /users                   controllers.UserController.getAllUsers
+GET     /users/search            controllers.UserController.searchUsers
 GET     /users/:id               controllers.UserController.getUserById(id: Int)
 PATCH    /users/me               controllers.UserController.updateBasicInfo
 PUT    /users/me/password        controllers.UserController.updatePassword
