@@ -40,17 +40,42 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
     userRepository.getUserById(id)
   }
 
-  def updateUser(authenticatedUserId: Int, user: User): Future[Either[String, (User, String)]] = {
+  def updateBasicInfo(authenticatedUserId: Int, newUsername: String): Future[Either[String, (User, String)]] = {
     userRepository.getUserById(authenticatedUserId).flatMap {
       case Some(existingUser) =>
-        if (user.username != existingUser.username) {
-          userRepository.getUserByUsername(user.username).flatMap {
+        if (newUsername != existingUser.username) {
+          userRepository.getUserByUsername(newUsername).flatMap {
             case Some(_) => Future.successful(Left("Username already exists"))
             case None =>
-              performUserUpdate(authenticatedUserId, user, existingUser)
+              val updatedUser = existingUser.copy(username = newUsername)
+              userRepository.updateUser(authenticatedUserId, updatedUser).map { updateCount =>
+                if (updateCount > 0) generateUpdatedToken(updatedUser)
+                else Left("Failed to update user")
+              }
           }
         } else {
-          performUserUpdate(authenticatedUserId, user, existingUser)
+          Future.successful(Left("Username is the same as the current one"))
+        }
+      case None => Future.successful(Left("User not found"))
+    }
+  }
+
+  def updatePassword(authenticatedUserId: Int, oldPassword: String, newPassword: String): Future[Either[String, Unit]] = {
+    userRepository.getUserById(authenticatedUserId).flatMap {
+      case Some(existingUser) =>
+        if (!PasswordUtils.checkPassword(oldPassword, existingUser.password)) {
+          Future.successful(Left("Incorrect old password"))
+        } else {
+          val hashedNewPassword = PasswordUtils.hashPassword(newPassword)
+          val updatedUser = existingUser.copy(password = hashedNewPassword)
+
+          userRepository.updateUser(authenticatedUserId, updatedUser).map { updateCount =>
+            if (updateCount > 0) {
+              Right(())
+            } else {
+              Left("Failed to update password")
+            }
+          }
         }
       case None => Future.successful(Left("User not found"))
     }
@@ -71,26 +96,6 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
     saveProfilePhoto(photo, filePath)
 
     userRepository.updateProfilePhoto(userId, s"/assets/images/users/$filename").map(_ => ())
-  }
-
-  private def performUserUpdate(id: Int, user: User, existingUser: User): Future[Either[String, (User, String)]] = {
-    val updatedUser = prepareUpdatedUser(id, user, existingUser)
-
-    userRepository.updateUser(id, updatedUser).map { updateCount =>
-      if (updateCount > 0) {
-        generateUpdatedToken(updatedUser)
-      } else {
-        Left("Failed to update user")
-      }
-    }
-  }
-
-  private def prepareUpdatedUser(id: Int, user: User, existingUser: User): User = {
-    if (user.password != existingUser.password) {
-      user.copy(id = Some(id), password = PasswordUtils.hashPassword(user.password))
-    } else {
-      user.copy(id = Some(id))
-    }
   }
 
   private def generateUpdatedToken(user: User): Either[String, (User, String)] = {
