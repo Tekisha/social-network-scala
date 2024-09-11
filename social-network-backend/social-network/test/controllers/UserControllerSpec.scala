@@ -20,18 +20,39 @@ class UserControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe CREATED
-      contentAsJson(result) mustBe Json.obj("id" -> 4, "username" -> "testuser")
+      val jsonResponse = contentAsJson(result)
+      (jsonResponse \ "username").as[String] mustBe "testuser"
+      (jsonResponse \ "profilePhoto").asOpt[String] mustBe None
     }
 
     "fail to register a user with an existing username" in {
       val registrationData = Json.obj("username" -> "existinguser", "password" -> "password123")
 
-      // First request to register the user
       val request: FakeRequest[JsObject] = FakeRequest(POST, "/register", Headers(), registrationData)
       val result = route(app, request).get
 
       status(result) mustBe CONFLICT
-      contentAsJson(result) mustBe Json.obj("message" -> "Username already exists")
+      (contentAsJson(result) \ "message").as[String] mustBe "Username already exists"
+    }
+
+    "fail to register a user with a short password" in {
+      val registrationData = Json.obj("username" -> "newuser", "password" -> "short")
+
+      val request: FakeRequest[JsObject] = FakeRequest(POST, "/register", Headers(), registrationData)
+      val result = route(app, request).get
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "message").as[String] mustBe "Password must be at least 8 characters long"
+    }
+
+    "fail to register a user with an empty or whitespace username" in {
+      val registrationData = Json.obj("username" -> "   ", "password" -> "password123")
+
+      val request: FakeRequest[JsObject] = FakeRequest(POST, "/register", Headers(), registrationData)
+      val result = route(app, request).get
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "message").as[String] mustBe "Username cannot be empty or just whitespace"
     }
   }
 
@@ -113,47 +134,122 @@ class UserControllerSpec extends TestBase {
     }
   }
 
-  "UserController PUT updateUser" should {
+  "UserController PATCH updateBasicInfo" should {
 
-    "successfully update the user when authenticated" in {
+    "successfully update user basic info" in {
       val token = getTokenForTestUser("testuser1", "password123")
+      val updateData = Json.obj("username" -> "newuser")
 
-      // Prepare the updated user data
-      val updatedUserData = Json.obj("username" -> "updateduser", "password" -> "newpassword123")
-
-      // Send the update request with the token
-      val request: FakeRequest[JsObject] = FakeRequest(PUT, "/users")
+      val request = FakeRequest(PATCH, "/users/me")
         .withHeaders("Authorization" -> s"Bearer $token")
-        .withBody(updatedUserData)
+        .withJsonBody(updateData)
+
       val result = route(app, request).get
 
       status(result) mustBe OK
-      (contentAsJson(result) \ "message").as[String] mustBe "User updated successfully"
-      (contentAsJson(result) \ "user" \ "username").as[String] mustBe "updateduser"
+      (contentAsJson(result) \ "message").as[String] mustBe "User info updated successfully"
       (contentAsJson(result) \ "token").as[String] must not be empty
     }
 
-    "return 409 Conflict when the update fails" in {
+    "fail to update with an empty username" in {
       val token = getTokenForTestUser("testuser1", "password123")
+      val updateData = Json.obj("username" -> "")
 
-      // Attempt to update with an existing username
-      val invalidUpdateData = Json.obj("username" -> "existinguser", "password" -> "newpassword123")
-      val request: FakeRequest[JsObject] = FakeRequest(PUT, "/users")
+      val request = FakeRequest(PATCH, "/users/me")
         .withHeaders("Authorization" -> s"Bearer $token")
-        .withBody(invalidUpdateData)
+        .withJsonBody(updateData)
+
+      val result = route(app, request).get
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "message").as[String] mustBe "Username cannot be empty or just whitespace"
+    }
+
+    "fail to update with a whitespace username" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+      val updateData = Json.obj("username" -> "   ")
+
+      val request = FakeRequest(PATCH, "/users/me")
+        .withHeaders("Authorization" -> s"Bearer $token")
+        .withJsonBody(updateData)
+
+      val result = route(app, request).get
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "message").as[String] mustBe "Username cannot be empty or just whitespace"
+    }
+
+    "fail to update with an existing username" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+      val updateData = Json.obj("username" -> "existinguser")
+
+      val request = FakeRequest(PATCH, "/users/me")
+        .withHeaders("Authorization" -> s"Bearer $token")
+        .withJsonBody(updateData)
+
       val result = route(app, request).get
 
       status(result) mustBe CONFLICT
       (contentAsJson(result) \ "message").as[String] mustBe "Username already exists"
     }
+  }
 
-    "return 401 Unauthorized when no token is provided" in {
-      val updateData = Json.obj("username" -> "updateduser", "password" -> "newpassword123")
-      val request: FakeRequest[JsObject] = FakeRequest(PUT, "/users").withBody(updateData)
+  "UserController PUT updatePassword" should {
+
+    "successfully update password" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+      val updateData = Json.obj("oldPassword" -> "password123", "newPassword" -> "newpassword123")
+
+      val request = FakeRequest(PUT, "/users/me/password")
+        .withHeaders("Authorization" -> s"Bearer $token")
+        .withJsonBody(updateData)
+
+      val result = route(app, request).get
+
+      status(result) mustBe OK
+      (contentAsJson(result) \ "message").as[String] mustBe "Password updated successfully"
+    }
+
+    "fail to update password with a short new password" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+      val updateData = Json.obj("oldPassword" -> "password123", "newPassword" -> "short")
+
+      val request = FakeRequest(PUT, "/users/me/password")
+        .withHeaders("Authorization" -> s"Bearer $token")
+        .withJsonBody(updateData)
+
+      val result = route(app, request).get
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "message").as[String] mustBe "New password must be at least 8 characters long"
+    }
+
+    "fail to update password with incorrect old password" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+      val updateData = Json.obj("oldPassword" -> "wrongpassword", "newPassword" -> "newpassword123")
+
+      val request = FakeRequest(PUT, "/users/me/password")
+        .withHeaders("Authorization" -> s"Bearer $token")
+        .withJsonBody(updateData)
 
       val result = route(app, request).get
 
       status(result) mustBe UNAUTHORIZED
+      (contentAsJson(result) \ "message").as[String] mustBe "Incorrect old password"
+    }
+
+    "fail to update password when user not found because of invalid token" in {
+      val token = "invalidToken"
+      val updateData = Json.obj("oldPassword" -> "password123", "newPassword" -> "newpassword123")
+
+      val request = FakeRequest(PUT, "/users/me/password")
+        .withHeaders("Authorization" -> s"Bearer $token")
+        .withJsonBody(updateData)
+
+      val result = route(app, request).get
+
+      status(result) mustBe UNAUTHORIZED
+      (contentAsJson(result) \ "message").as[String] mustBe "Invalid or missing token"
     }
   }
 
