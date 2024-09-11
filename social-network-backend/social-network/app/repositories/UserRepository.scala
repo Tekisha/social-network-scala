@@ -58,9 +58,4 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
       .take(pageSize)
     db.run(query.result)
   }
-
-  def countUsersByUsername(username: String): Future[Int] = {
-    val query = users.filter(_.username.like(s"%$username%")).length
-    db.run(query.result)
-  }
 }

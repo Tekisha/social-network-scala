@@ -102,10 +102,6 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
     userRepository.searchByUsername(username, page, pageSize)
   }
 
-  def countUsersByUsername(username: String): Future[Int] = {
-    userRepository.countUsersByUsername(username)
-  }
-
   private def generateUpdatedToken(user: User): Either[String, (User, String)] = {
     val newToken = JwtUtils.createToken(user.id.get, user.username, expirationPeriodInDays = 7)
     Right((user, newToken))

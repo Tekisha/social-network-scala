@@ -144,17 +144,11 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
   }
 
   def searchUsers: Action[AnyContent] = authAction.async { implicit request =>
-    val usernameParam = request.getQueryString("username").map(_.trim).getOrElse("")
-    val pageParam = request.getQueryString("page").map(_.trim)
-    val pageSizeParam = request.getQueryString("pageSize").map(_.trim)
+    val username = request.getQueryString("username").map(_.trim).getOrElse("")
+    val page = request.getQueryString("page").flatMap(p => scala.util.Try(p.toInt).toOption).getOrElse(1)
+    val pageSize = request.getQueryString("pageSize").flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
 
-    val pageNum = pageParam.flatMap(p => scala.util.Try(p.toInt).toOption).getOrElse(1)
-    val pageSizeNum = pageSizeParam.flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
-
-    for {
-      totalUsers <- userService.countUsersByUsername(usernameParam)
-      paginatedUsers <- userService.searchUsersByUsername(usernameParam, pageNum, pageSizeNum)
-    } yield {
+    userService.searchUsersByUsername(username, page, pageSize).map { paginatedUsers =>
       if (paginatedUsers.isEmpty) {
         NotFound(Json.obj("message" -> "No users found"))
       } else {
@@ -163,7 +157,6 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
       }
     }
   }
-
 
   private def validateUsername(username: String): Either[String, String] = {
     if (username.trim.isEmpty) {
