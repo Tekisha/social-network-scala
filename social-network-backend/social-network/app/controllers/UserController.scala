@@ -12,6 +12,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 import exceptions.UsernameAlreadyExistsException
 import play.api.libs.Files.TemporaryFile
 import java.nio.file.{Files, Path, Paths}
+import utils.FileUtils
 
 @Singleton
 class UserController @Inject()(cc: ControllerComponents, userService: UserService, authAction: AuthAction)(implicit ec: ExecutionContext) extends AbstractController(cc) {
@@ -97,10 +98,19 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
     val userId = request.userId
     request.body.file("profile_photo").map { photo =>
       val extension = Paths.get(photo.filename).getFileName.toString.split("\\.").lastOption.getOrElse("jpg")
-      val filename = s"$userId.$extension"
+      val fileSize = photo.fileSize
 
-      userService.updateProfilePhoto(userId, photo.ref, filename).map { _ =>
-        Ok(Json.obj("message" -> "Profile photo updated successfully"))
+      println(s"File size: ${fileSize}")
+
+      if (!FileUtils.isValidExtension(photo.filename)) {
+        Future.successful(BadRequest(Json.obj("message" -> "Invalid file type. Only jpg and png are allowed.")))
+      } else if (!FileUtils.isValidSize(fileSize)) {
+        Future.successful(BadRequest(Json.obj("message" -> "File size exceeds the 5MB limit.")))
+      } else {
+        val filename = s"$userId.$extension"
+        userService.updateProfilePhoto(userId, photo.ref, filename).map { _ =>
+          Ok(Json.obj("message" -> "Profile photo updated successfully"))
+        }
       }
     }.getOrElse {
       Future.successful(BadRequest(Json.obj("message" -> "Missing file")))
