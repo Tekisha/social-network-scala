@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Navbar from '../navbar/navbar.jsx';
 import Post from '../post/post.jsx';
 import UsersList from '../user-list/user-list.jsx';
+import EditProfileModal from '../forms/edit-profile/edit-profile-modal.jsx';
 import './profile-page.css';
 import { useParams } from "react-router-dom";
 
@@ -27,6 +28,7 @@ function ProfilePage() {
     const [posts, setPosts] = useState([]);
     const [friends, setFriends] = useState([]);
     const [showFriendsModal, setShowFriendsModal] = useState(false);
+    const [showEditProfileModal, setShowEditProfileModal] = useState(false); // State to handle modal visibility
     const [loading, setLoading] = useState(false);
 
     const token = mockToken;
@@ -106,7 +108,16 @@ function ProfilePage() {
     };
 
     const toggleFriendsModal = () => {
-        setShowFriendsModal(!showFriendsModal); // Toggle the modal
+        setShowFriendsModal(!showFriendsModal);
+    };
+
+    const toggleEditProfileModal = () => {
+        setShowEditProfileModal(!showEditProfileModal);
+    };
+
+    const handleSaveProfile = (updatedInfo) => {
+        console.log("Updated Info:", updatedInfo);
+        setUserInfo({ ...userInfo, username: updatedInfo.username });
     };
 
     return (
@@ -123,7 +134,7 @@ function ProfilePage() {
                             </button>
                         )}
                         {userInfo.isCurrentUser ? (
-                            <button className="edit-button">
+                            <button className="edit-button" onClick={toggleEditProfileModal}>
                                 <i className="fas fa-edit"></i> Edit Profile
                             </button>
                         ) : userInfo.isFriend ? (
@@ -149,6 +160,13 @@ function ProfilePage() {
                     </div>
                 )}
 
+                {showEditProfileModal && (
+                    <EditProfileModal
+                        userInfo={userInfo}
+                        onClose={toggleEditProfileModal}
+                        onSave={handleSaveProfile}
+                    />
+                )}
 
                 <h3 className="section-title">Posts</h3>
                 <div className="user-posts">
