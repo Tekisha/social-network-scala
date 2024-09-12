@@ -149,12 +149,8 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
     val pageSize = request.getQueryString("pageSize").flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
 
     userService.searchUsersByUsername(username, page, pageSize).map { paginatedUsers =>
-      if (paginatedUsers.isEmpty) {
-        NotFound(Json.obj("message" -> "No users found"))
-      } else {
         val userResponses = paginatedUsers.map(user => UserResponse(user.id, user.username, user.profilePhoto))
         Ok(Json.toJson(userResponses))
-      }
     }
   }
 
