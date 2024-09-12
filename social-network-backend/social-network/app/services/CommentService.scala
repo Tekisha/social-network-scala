@@ -11,9 +11,14 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CommentService @Inject()(commentRepository: CommentRepository)(implicit ec: ExecutionContext) {
 
-  def createComment(postId: Int, userId: Int, content: String, parentCommentId: Option[Int]): Future[Comment] = {
+  def createComment(postId: Int, userId: Int, content: String, parentCommentId: Option[Int]): Future[CommentWithReplies] = {
     val comment = Comment(None, postId, userId, content, new Timestamp(System.currentTimeMillis()), parentCommentId)
-    commentRepository.createComment(comment)
+    commentRepository.createComment(comment).flatMap { createdComment =>
+      commentRepository.getCommentWithUserDetails(createdComment.id.get).map { commentDetails =>
+        val (comment, username, profilePhoto) = commentDetails
+        CommentWithReplies(comment, Seq.empty, username, profilePhoto)
+      }
+    }
   }
 
   def getCommentsForPost(postId: Int, page: Int, pageSize: Int): Future[Seq[CommentWithReplies]] = {

@@ -17,8 +17,8 @@ class CommentController @Inject()(cc: ControllerComponents, commentService: Comm
   def createComment(postId: Int): Action[CreateCommentData] = authAction.async(parse.json[CreateCommentData]) { implicit request =>
     val userId = request.userId
     val commentData = request.body
-    commentService.createComment(postId, userId, commentData.content, commentData.parentCommentId).map { comment =>
-      Created(Json.toJson(comment))
+    commentService.createComment(postId, userId, commentData.content, commentData.parentCommentId).map { commentWithReplies =>
+      Created(Json.toJson(commentWithReplies))
     }
   }
 

@@ -56,4 +56,19 @@ class CommentRepository @Inject()(override protected val dbConfigProvider: Datab
       }
     }
   }
+
+  def getCommentWithUserDetails(commentId: Int): Future[(Comment, String, Option[String])] = {
+    val query = sql"""
+    SELECT c.id, c.post_id, c.user_id, c.content, c.created_at, c.parent_comment_id,
+           u.username, u.profile_photo
+    FROM comments c
+    JOIN users u ON c.user_id = u.id
+    WHERE c.id = $commentId
+  """.as[(Int, Int, Int, String, Timestamp, Option[Int], String, Option[String])].head
+
+    db.run(query).map { case (id, postId, userId, content, createdAt, parentCommentId, username, profilePhoto) =>
+      val comment = Comment(Some(id), postId, userId, content, createdAt, parentCommentId)
+      (comment, username, profilePhoto)
+    }
+  }
 }
