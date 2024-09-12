@@ -5,6 +5,7 @@ import Register from "./components/forms/register/Register";
 import MainPage from "./components/main-page/main-page.jsx";
 import ProfilePage from "./components/profile-page/profile-page.jsx";
 import SearchPage from "./components/search-page/search-page.jsx";
+import PostDetails from "./components/post-details/post-details.jsx";
 
 function App() {
     return (
@@ -15,6 +16,7 @@ function App() {
                 <Route path="/home" element={<MainPage />} />
                 <Route path="/profile/:viewedUserId" element={<ProfilePage />} />
                 <Route path="/search" element={<SearchPage />} />
+                <Route path="/post/:postId" element={<PostDetails/>} />
                 <Route path="*" element={<Login />} /> {/* Default route */}
             </Routes>
         </Router>
