@@ -70,9 +70,24 @@ trait Tables { self: HasDatabaseConfigProvider[JdbcProfile] =>
     def uniqueUserPost = index("unique_user_post", (userId, postId), unique = true)
   }
 
+  class CommentTable(tag: Tag) extends Table[Comment](tag, "comments") {
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+    def postId = column[Int]("post_id")
+    def userId = column[Int]("user_id")
+    def content = column[String]("content", O.Length(255))
+    def createdAt = column[Timestamp]("created_at")
+    def parentCommentId = column[Option[Int]]("parent_comment_id") // No need to call .?
+
+    def * = (id.?, postId, userId, content, createdAt, parentCommentId) <> ((Comment.apply _).tupled, Comment.unapply)
+
+    def post = foreignKey("post_fk", postId, TableQuery[PostTable])(_.id, onDelete = ForeignKeyAction.Cascade)
+    def parentComment = foreignKey("parent_comment_fk", parentCommentId, TableQuery[CommentTable])(_.id.?, onDelete = ForeignKeyAction.Cascade)
+  }
+
   protected val users = TableQuery[UserTable]
   protected val posts = TableQuery[PostTable]
   protected val friendRequests = TableQuery[FriendRequestTable]
   protected val friendships = TableQuery[FriendshipTable]
   protected val likes = TableQuery[LikeTable]
+  protected val comments = TableQuery[CommentTable]
 }
