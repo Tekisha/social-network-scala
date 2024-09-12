@@ -346,7 +346,9 @@ class UserControllerSpec extends TestBase {
 
       val result = route(app, request).get
 
-      status(result) mustBe NOT_FOUND
+      status(result) mustBe OK
+      val jsonResponse = contentAsJson(result)
+      jsonResponse.as[Seq[JsObject]].isEmpty mustBe true
     }
 
     "return 401 Unauthorized when no token is provided" in {
