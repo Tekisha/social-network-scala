@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import Post from '../post/Post';  // Import the Post component
-import Comment from '../comment/comment.jsx';  // Import the Comment component
-import CreatePost from '../forms/create-post/create-post.jsx';  // Reuse CreatePost component as add-comment form
-import Navbar from '../navbar/navbar.jsx';  // Import the Navbar
-import './post-details.css';  // Custom styles for PostDetails
+import { useLocation } from 'react-router-dom';
+import Post from '../post/Post';
+import Comment from '../comment/comment.jsx';
+import CreatePost from '../forms/create-post/create-post.jsx';
+import Navbar from '../navbar/navbar.jsx';
+import './post-details.css';
 
 function PostDetails({ postId }) {
+    const location = useLocation();
+    const loggedInUserId = location.state.loggedInUserId;
+
     const [post, setPost] = useState(null);
     const [comments, setComments] = useState([]);
 
@@ -54,7 +58,7 @@ function PostDetails({ postId }) {
         <div className="post-details-wrapper">
             <Navbar />
             <div className="post-details-container">
-                <Post post={post} handleLike={handleLike} />
+                <Post post={post} loggedInUserId={loggedInUserId} handleLike={handleLike} />
 
                 <CreatePost onSubmit={handleCommentSubmit} placeholder="Write a comment..." />
 

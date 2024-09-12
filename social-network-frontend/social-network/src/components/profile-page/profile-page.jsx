@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import Navbar from '../navbar/navbar.jsx';
-import Post from '../post/post.jsx';
 import UsersList from '../user-list/user-list.jsx';
 import EditProfileModal from '../forms/edit-profile/edit-profile-modal.jsx';
 import './profile-page.css';
 import { useParams } from "react-router-dom";
+import PostFeed from "../post-feed/post-feed.jsx";
 
 // Mocked jwtUtils to decode token
 const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
@@ -28,7 +28,7 @@ function ProfilePage() {
     const [posts, setPosts] = useState([]);
     const [friends, setFriends] = useState([]);
     const [showFriendsModal, setShowFriendsModal] = useState(false);
-    const [showEditProfileModal, setShowEditProfileModal] = useState(false); // State to handle modal visibility
+    const [showEditProfileModal, setShowEditProfileModal] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const token = mockToken;
@@ -174,15 +174,13 @@ function ProfilePage() {
                         <div className="spinner"></div>
                     ) : (
                         userInfo.isFriend || userInfo.isCurrentUser ? (
-                            posts.map(post => (
-                                <Post key={post.id} post={post} handleLike={handleLike}/>
-                            ))
+                            <PostFeed posts={posts} handleLike={handleLike} />
                         ) : (
                             <p key="become-friends">Become friends to see posts!</p>
                         )
                     )}
                 </div>
-            </div>
+             </div>
         </div>
     );
 }

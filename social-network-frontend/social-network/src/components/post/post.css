@@ -91,3 +91,27 @@
     font-size: 1rem;
     color: #333;
 }
+
+.post-actions-extra {
+    display: flex;
+    gap: 1rem;
+    margin-left: auto;
+}
+
+.edit-post-button,
+.delete-post-button {
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    width: 40px;
+    height: 40px;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.edit-post-button:hover,
+.delete-post-button:hover {
+    transform: translateY(-2px);
+}
+

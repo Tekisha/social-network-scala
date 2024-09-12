@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import CreatePost from '../forms/create-post/create-post.jsx';
 import "./comment.css";
 
-function Comment({ comment, handleLike, handleReplySubmit }) {
+function Comment({ comment }) {
     const [showReplies, setShowReplies] = useState(false);
     const [replies, setReplies] = useState(comment.replies || []);
     const [replying, setReplying] = useState(false);
@@ -23,7 +23,12 @@ function Comment({ comment, handleLike, handleReplySubmit }) {
             replies: []
         };
         setReplies([...replies, newReply]);
-        setReplying(false);
+        setReplying(false);  // Close reply form after submission
+    };
+
+    const handleLike = () => {
+        comment.likedByMe = !comment.likedByMe;
+        comment.likes = comment.likedByMe ? comment.likes + 1 : comment.likes - 1;
     };
 
     return (
@@ -34,7 +39,7 @@ function Comment({ comment, handleLike, handleReplySubmit }) {
             </div>
             <p className="comment-content">{comment.content}</p>
             <div className="comment-actions">
-                <div onClick={() => handleLike(comment.id)} className={`like-button ${comment.likedByMe ? 'liked' : ''}`}>
+                <div onClick={handleLike} className={`like-button ${comment.likedByMe ? 'liked' : ''}`}>
                     <i className="fas fa-thumbs-up"></i>
                     <span className="like-count">{comment.likes}</span>
                 </div>
@@ -48,17 +53,12 @@ function Comment({ comment, handleLike, handleReplySubmit }) {
                 </div>
             </div>
 
-            <CreatePost onSubmit={handleReplySubmit} placeholder="Write a reply..." />
+            {replying && <CreatePost onSubmit={handleReply} placeholder="Write a reply..." />}
 
             {showReplies && (
                 <div className="replies">
                     {replies.map(reply => (
-                        <Comment
-                            key={reply.id}
-                            comment={reply}
-                            handleLike={handleLike}
-                            handleReplySubmit={handleReplySubmit}
-                        />
+                        <Comment key={reply.id} comment={reply} />
                     ))}
                 </div>
             )}
