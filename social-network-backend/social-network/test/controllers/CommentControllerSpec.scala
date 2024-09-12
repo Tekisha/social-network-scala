@@ -17,7 +17,7 @@ class CommentControllerSpec extends TestBase {
       val result = route(app, request).get
 
       status(result) mustBe CREATED
-      (contentAsJson(result) \ "content").as[String] mustBe "This is a test comment"
+      (contentAsJson(result) \ "comment" \ "content").as[String] mustBe "This is a test comment"
     }
 
     "fail to create a comment when not authenticated" in {
