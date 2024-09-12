@@ -56,7 +56,7 @@ function PostDetails({ postId }) {
             <div className="post-details-container">
                 <Post post={post} handleLike={handleLike} />
 
-                <CreatePost onSubmit={handleCommentSubmit} />
+                <CreatePost onSubmit={handleCommentSubmit} placeholder="Write a comment..." />
 
                 <div className="comments-section">
                     <h3>Comments</h3>

@@ -48,7 +48,7 @@ function Comment({ comment, handleLike, handleReplySubmit }) {
                 </div>
             </div>
 
-            {replying && <CreatePost onSubmit={handleReply} />}
+            <CreatePost onSubmit={handleReplySubmit} placeholder="Write a reply..." />
 
             {showReplies && (
                 <div className="replies">

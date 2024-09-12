@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import '../forms.css';
 import './create-post.css';
 
-function CreatePost({ onSubmit }) {
+function CreatePost({ onSubmit, placeholder }) {
     const [newPost, setNewPost] = useState("");
 
     const handleSubmit = (e) => {
@@ -18,7 +17,7 @@ function CreatePost({ onSubmit }) {
                 <textarea
                     value={newPost}
                     onChange={(e) => setNewPost(e.target.value)}
-                    placeholder="What's on your mind?"
+                    placeholder={placeholder}  // Set custom placeholder
                     rows="3"
                     className="create-post-textarea"
                 ></textarea>

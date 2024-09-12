@@ -66,7 +66,7 @@ function MainPage() {
         <div className="main-page-wrapper">
             <Navbar />
             <div className="main-page-container">
-                <CreatePost onSubmit={handleCreatePost} />
+                <CreatePost onSubmit={handleCreatePost} placeholder="What's on your mind?" />
                 {loading ? <div className="spinner"></div> : <PostFeed posts={posts} handleLike={handleLike} />}
             </div>
         </div>
