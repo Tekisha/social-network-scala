@@ -98,6 +98,10 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
     userRepository.updateProfilePhoto(userId, s"/assets/images/users/$filename").map(_ => ())
   }
 
+  def searchUsersByUsername(username: String, page: Int, pageSize: Int): Future[Seq[User]] = {
+    userRepository.searchByUsername(username, page, pageSize)
+  }
+
   private def generateUpdatedToken(user: User): Either[String, (User, String)] = {
     val newToken = JwtUtils.createToken(user.id.get, user.username, expirationPeriodInDays = 7)
     Right((user, newToken))

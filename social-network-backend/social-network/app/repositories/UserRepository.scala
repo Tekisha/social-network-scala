@@ -50,4 +50,12 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
   def updateProfilePhoto(userId: Int, filePath: String): Future[Int] = {
     db.run(users.filter(_.id === userId).map(_.profilePhoto).update(Some(filePath)))
   }
+
+  def searchByUsername(username: String, page: Int, pageSize: Int): Future[Seq[User]] = {
+    val query = users
+      .filter(_.username.toLowerCase.like(s"%${username.toLowerCase}%"))
+      .drop((page - 1) * pageSize)
+      .take(pageSize)
+    db.run(query.result)
+  }
 }

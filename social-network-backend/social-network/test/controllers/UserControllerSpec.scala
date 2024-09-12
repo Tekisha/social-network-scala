@@ -322,4 +322,40 @@ class UserControllerSpec extends TestBase {
       (contentAsJson(result) \ "message").as[String] mustBe "Invalid or missing token"
     }
   }
+
+  "UserController GET searchUsers" should {
+
+    "successfully return matching users" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+
+      val request = FakeRequest(GET, "/users/search?username=test")
+        .withHeaders("Authorization" -> s"Bearer $token")
+
+      val result = route(app, request).get
+
+      status(result) mustBe OK
+      val users = contentAsJson(result).as[Seq[JsObject]]
+      users.nonEmpty mustBe true
+    }
+
+    "return 404 when no users are found" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+
+      val request = FakeRequest(GET, "/users/search?username=nonexistent")
+        .withHeaders("Authorization" -> s"Bearer $token")
+
+      val result = route(app, request).get
+
+      status(result) mustBe NOT_FOUND
+    }
+
+    "return 401 Unauthorized when no token is provided" in {
+      val request = FakeRequest(GET, "/users/search?username=test")
+
+      val result = route(app, request).get
+
+      status(result) mustBe UNAUTHORIZED
+      (contentAsJson(result) \ "message").as[String] mustBe "Invalid or missing token"
+    }
+  }
 }

@@ -143,6 +143,17 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
     }
   }
 
+  def searchUsers: Action[AnyContent] = authAction.async { implicit request =>
+    val username = request.getQueryString("username").map(_.trim).getOrElse("")
+    val page = request.getQueryString("page").flatMap(p => scala.util.Try(p.toInt).toOption).getOrElse(1)
+    val pageSize = request.getQueryString("pageSize").flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
+
+    userService.searchUsersByUsername(username, page, pageSize).map { paginatedUsers =>
+        val userResponses = paginatedUsers.map(user => UserResponse(user.id, user.username, user.profilePhoto))
+        Ok(Json.toJson(userResponses))
+    }
+  }
+
   private def validateUsername(username: String): Either[String, String] = {
     if (username.trim.isEmpty) {
       Left("Username cannot be empty or just whitespace")
