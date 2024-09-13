@@ -9,7 +9,7 @@ import './post-details.css';
 function PostDetails() {
     const { postId } = useParams();
     const [post, setPost] = useState(null);
-    const [comments] = useState([]);
+    const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchPostDetails = async () => {
@@ -36,7 +36,6 @@ function PostDetails() {
                     timestamp: data.post.createdAt,
                 };
                 setPost(postDetails);
-                setLoading(false);
             } else {
                 console.error('Error fetching post details:', data.message);
             }
@@ -45,11 +44,36 @@ function PostDetails() {
         }
     };
 
+    const fetchComments = async () => {
+        const token = localStorage.getItem('token');
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/${postId}/comments?page=1&pageSize=50`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                setComments(data);
+            } else {
+                console.error('Error fetching comments:', data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
     useEffect(() => {
         fetchPostDetails();
+        fetchComments();
+        setLoading(false);
     }, [postId]);
 
-    if (loading) {
+    if (loading || !post) {
         return <div>Loading...</div>;
     }
 
@@ -66,8 +90,8 @@ function PostDetails() {
                     {comments.length === 0 ? (
                         <p>No comments yet.</p>
                     ) : (
-                        comments.map(comment => (
-                            <Comment key={comment.id} comment={comment} />
+                        comments.map((comment) => (
+                            <Comment key={comment.comment.id} comment={comment} />
                         ))
                     )}
                 </div>

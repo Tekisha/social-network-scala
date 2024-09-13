@@ -23,26 +23,17 @@ function Comment({ comment }) {
             replies: []
         };
         setReplies([...replies, newReply]);
-        setReplying(false);  // Close reply form after submission
-    };
-
-    const handleLike = () => {
-        comment.likedByMe = !comment.likedByMe;
-        comment.likes = comment.likedByMe ? comment.likes + 1 : comment.likes - 1;
+        setReplying(false);
     };
 
     return (
         <div className="comment">
             <div className="comment-header">
-                <span className="comment-user">{comment.user}</span>
-                <span className="comment-time">{new Date(comment.timestamp).toLocaleString()}</span>
+                <span className="comment-user">User {comment.comment.id}</span>
+                <span className="comment-time">{new Date(comment.comment.createdAt).toLocaleString()}</span>
             </div>
-            <p className="comment-content">{comment.content}</p>
+            <p className="comment-content">{comment.comment.content}</p>
             <div className="comment-actions">
-                <div onClick={handleLike} className={`like-button ${comment.likedByMe ? 'liked' : ''}`}>
-                    <i className="fas fa-thumbs-up"></i>
-                    <span className="like-count">{comment.likes}</span>
-                </div>
                 <div onClick={toggleReplies} className="reply-button">
                     <i className="fas fa-reply"></i>
                     <span>{showReplies ? `Hide Replies (${replies.length})` : `Show Replies (${replies.length})`}</span>
@@ -58,7 +49,7 @@ function Comment({ comment }) {
             {showReplies && (
                 <div className="replies">
                     {replies.map(reply => (
-                        <Comment key={reply.id} comment={reply} />
+                        <Comment key={reply.comment.id} comment={reply} />
                     ))}
                 </div>
             )}
