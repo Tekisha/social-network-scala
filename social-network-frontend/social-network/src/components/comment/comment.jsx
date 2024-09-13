@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CreatePost from '../forms/create-post/create-post.jsx';
 import "./comment.css";
+import { Link } from 'react-router-dom';
 
 function Comment({ comment }) {
     const [showReplies, setShowReplies] = useState(false);
@@ -29,8 +30,23 @@ function Comment({ comment }) {
     return (
         <div className="comment">
             <div className="comment-header">
-                <span className="comment-user">{comment.username}</span>
-                <span className="comment-time">{new Date(comment.comment.createdAt).toLocaleString()}</span>
+                <div className="comment-header-left">
+                    <Link to={`/profile/${comment.comment.userId}`} className="comment-profile-link">
+                        <img
+                            src={`${import.meta.env.VITE_BACKEND_URL}${comment.profilePhoto || "/assets/images/default-user.png"}`}
+                            alt={`${comment.username}'s profile`}
+                            className="comment-user-photo"
+                        />
+                    </Link>
+                    <span className="comment-user">
+                        <Link to={`/profile/${comment.comment.userId}`} className="comment-user-link">
+                            {comment.username}
+                        </Link>
+                    </span>
+                </div>
+                <span className="comment-time">
+                    {new Date(comment.comment.createdAt).toLocaleString()}
+                </span>
             </div>
             <p className="comment-content">{comment.comment.content}</p>
             <div className="comment-actions">
