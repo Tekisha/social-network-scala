@@ -52,7 +52,9 @@ class PostController @Inject()(cc: ControllerComponents, postService: PostServic
     val pageNum = pageParam.flatMap(p => scala.util.Try(p.toInt).toOption).getOrElse(1)
     val pageSizeNum = pageSizeParam.flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
 
-    postService.getUserPosts(userId, pageNum, pageSizeNum).map { posts =>
+    val currentUserId = request.userId
+
+    postService.getUserPosts(userId, pageNum, pageSizeNum, currentUserId).map { posts =>
       Ok(Json.toJson(posts))
     }
   }

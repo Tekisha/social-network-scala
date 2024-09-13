@@ -66,13 +66,13 @@ class PostRepository @Inject()(override protected val dbConfigProvider: Database
     }
   }
 
-  def getUserPostsWithLikes(userId: Int, page: Int, pageSize: Int): Future[Seq[PostWithLikes]] = {
+  def getUserPostsWithLikes(userId: Int, page: Int, pageSize: Int, currentUserId: Int): Future[Seq[PostWithLikes]] = {
     val offset = (page - 1) * pageSize
 
     val query = sql"""
     SELECT p.id, p.user_id, p.content, p.created_at, p.updated_at,
            COUNT(DISTINCT l.id) AS like_count,
-           MAX(l.user_id = $userId) AS liked_by_me,
+           MAX(l.user_id = $currentUserId) AS liked_by_me,
            COUNT(DISTINCT c.id) AS comment_count,
            u.username, u.profile_photo
     FROM posts p
@@ -86,8 +86,8 @@ class PostRepository @Inject()(override protected val dbConfigProvider: Database
   """.as[(Int, Int, String, Timestamp, Timestamp, Int, Boolean, Int, String, Option[String])]
 
     db.run(query).map { results =>
-      results.map { case (id, userId, content, createdAt, updatedAt, likeCount, likedByMe, commentCount, username, profilePhoto) =>
-        PostWithLikes(Post(Some(id), userId, content, createdAt, updatedAt), likedByMe, likeCount, commentCount, username, profilePhoto)
+      results.map { case (id, postUserId, content, createdAt, updatedAt, likeCount, likedByMe, commentCount, username, profilePhoto) =>
+        PostWithLikes(Post(Some(id), postUserId, content, createdAt, updatedAt), likedByMe, likeCount, commentCount, username, profilePhoto)
       }
     }
   }
