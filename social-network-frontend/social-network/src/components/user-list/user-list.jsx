@@ -15,7 +15,7 @@ function UsersList({ title, users, closeModal }) {
                                 className="user-link"
                                 onClick={closeModal ? closeModal : undefined}
                             >
-                                <img src={user.profilePic || '/src/assets/user-icon.png'} alt={user.username} className="user-pic" />
+                                <img src={`${import.meta.env.VITE_BACKEND_URL}${user.profilePhoto || "/assets/images/default-user.png"}`} alt={user.username} className="user-pic" />
                                 <span>{user.username}</span>
                             </Link>
                         </li>
