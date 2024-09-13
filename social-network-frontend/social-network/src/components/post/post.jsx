@@ -8,7 +8,8 @@ function Post({ post }) {
     const token = localStorage.getItem("token");
     const decodedToken = decodeJWT(token);
     const loggedInUserId = decodedToken.userId;
-
+    console.log(post)
+    console.log(import.meta.env.VITE_BACKEND_URL + post.profilePhoto)
     const [liked, setLiked] = useState(post.likedByMe);
     const [likesCount, setLikesCount] = useState(post.likes);
 
@@ -72,7 +73,7 @@ function Post({ post }) {
                 <div className="user-info" onClick={handleProfileClick}>
                     <img src={`${import.meta.env.VITE_BACKEND_URL}${post.profilePhoto || "/assets/images/default-user.png"}`}
                          alt="User" className="post-user-icon" />
-                    <span className="post-user">{post.user}</span>
+                    <span className="post-user">{post.username}</span>
                 </div>
                 <span className="post-time">{formatTime(post.timestamp)}</span>
             </div>

@@ -28,13 +28,14 @@ function PostDetails() {
             if (response.ok) {
                 const postDetails = {
                     id: data.post.id,
-                    user: 'User' + data.post.userId,
+                    username: data.username,
                     content: data.post.content,
                     likes: data.likeCount,
                     likedByMe: data.likedByMe,
                     comments: data.commentCount,
                     timestamp: data.post.createdAt,
                     userId: data.post.userId,
+                    profilePhoto: data.profilePhoto,
                 };
                 setPost(postDetails);
             } else {

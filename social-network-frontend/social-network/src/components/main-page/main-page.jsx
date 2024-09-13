@@ -26,13 +26,14 @@ function MainPage() {
                 if (response.ok) {
                     const formattedPosts = data.map((item) => ({
                         id: item.post.id,
-                        user: "Username",
+                        username: item.username,
                         content: item.post.content,
                         likes: item.likeCount,
                         likedByMe: item.likedByMe,
                         timestamp: item.post.createdAt,
                         comments: item.commentCount,
                         userId: item.post.userId,
+                        profilePhoto: item.profilePhoto,
                     }));
                     setPosts(formattedPosts);
                 } else {
@@ -50,8 +51,6 @@ function MainPage() {
 
     const handleCreatePost = async (newPostContent) => {
         const token = localStorage.getItem("token");
-        const decodedToken = decodeJWT(token);
-        const username = decodedToken.username;
 
         const requestBody = {
             content: newPostContent,
@@ -72,13 +71,14 @@ function MainPage() {
             if (response.ok) {
                 const newPost = {
                     id: data.post.id,
-                    user: username,
+                    username: data.username,
                     content: data.post.content,
                     likes: data.likeCount,
                     likedByMe: data.likedByMe,
                     timestamp: data.post.createdAt,
                     comments: data.commentCount,
                     userId: data.post.userId,
+                    profilePhoto: data.profilePhoto,
                 };
                 setPosts([newPost, ...posts]);
             } else {
