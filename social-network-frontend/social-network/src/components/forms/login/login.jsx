@@ -1,26 +1,48 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import '../forms.css';
 
 function Login() {
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError("");
 
-        setTimeout(() => {
-            if (email === "test" && password === "password") {
+        const requestBody = {
+            username,
+            password,
+        };
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
                 console.log("Logged in successfully");
-                setLoading(false);
+                localStorage.setItem("token", data.token);
+
+                navigate("/home");
             } else {
-                setLoading(false);
-                setError("Invalid credentials, please try again.");
+                setError(data.message || "Invalid credentials, please try again.");
             }
-        }, 2000);
+        } catch (error) {
+            setError("Something went wrong. Please try again later.");
+        }
+
+        setLoading(false);
     };
 
     return (
@@ -30,17 +52,17 @@ function Login() {
             </div>
             <div className="right-container">
                 <form onSubmit={handleSubmit} className="form-container">
-                    <h2 className=".form-title">Login</h2>
+                    <h2 className="form-title">Login</h2>
 
                     {error && <p className="error-message">{error}</p>}
 
                     <div className="input-group">
-                        <label>Email</label>
+                        <label>Username</label>
                         <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter your email"
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Enter your username"
                             required
                         />
                     </div>
