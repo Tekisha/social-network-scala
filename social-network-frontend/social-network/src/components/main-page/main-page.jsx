@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Navbar from '../navbar/navbar.jsx';
 import PostFeed from '../post-feed/post-feed.jsx';
 import CreatePost from '../forms/create-post/create-post.jsx';
+import { decodeJWT } from '../../utils/jwtUtils';
 import './main-page.css';
 
 function MainPage() {
@@ -9,31 +10,6 @@ function MainPage() {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        setLoading(true);
-        setTimeout(() => {
-            const dummyPosts = [
-                {
-                    id: 1,
-                    user: "JohnDoe",
-                    content: "Had a great day today!",
-                    likes: 10,
-                    likedByMe: false,
-                    timestamp: new Date().toISOString(),
-                    comments: 2,
-                },
-                {
-                    id: 2,
-                    user: "JaneSmith",
-                    content: "Loving this new app!",
-                    likes: 5,
-                    likedByMe: true,
-                    timestamp: new Date().toISOString(),
-                    comments: 4,
-                },
-            ];
-            setPosts(dummyPosts);
-            setLoading(false);
-        }, 1000);
     }, []);
 
     const handleLike = (postId) => {
@@ -50,16 +26,44 @@ function MainPage() {
         );
     };
 
-    const handleCreatePost = (newPostContent) => {
-        const newPost = {
-            id: posts.length + 1,
-            user: "CurrentUser",
+    const handleCreatePost = async (newPostContent) => {
+        const token = localStorage.getItem("token");
+        const decodedToken = decodeJWT(token);
+        const username = decodedToken.username;
+
+        const requestBody = {
             content: newPostContent,
-            likes: 0,
-            likedByMe: false,
-            timestamp: new Date().toISOString(),
         };
-        setPosts([newPost, ...posts]);
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify(requestBody),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                const newPost = {
+                    id: data.post.id,
+                    user: username,
+                    content: data.post.content,
+                    likes: data.likeCount,
+                    likedByMe: data.likedByMe,
+                    timestamp: data.post.createdAt,
+                    comments: data.commentCount,
+                };
+                setPosts([newPost, ...posts]);
+            } else {
+                console.error("Failed to create post", data.message);
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
     };
 
     return (

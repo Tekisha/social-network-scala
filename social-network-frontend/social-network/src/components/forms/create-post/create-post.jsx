@@ -8,7 +8,7 @@ function CreatePost({ onSubmit, placeholder }) {
         e.preventDefault();
         if (newPost.trim() === "") return;
         onSubmit(newPost);
-        setNewPost("");  // Clear input after submission
+        setNewPost("");
     };
 
     return (
