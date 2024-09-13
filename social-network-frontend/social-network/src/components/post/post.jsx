@@ -8,8 +8,7 @@ function Post({ post }) {
     const token = localStorage.getItem("token");
     const decodedToken = decodeJWT(token);
     const loggedInUserId = decodedToken.userId;
-    console.log(post)
-    console.log(import.meta.env.VITE_BACKEND_URL + post.profilePhoto)
+
     const [liked, setLiked] = useState(post.likedByMe);
     const [likesCount, setLikesCount] = useState(post.likes);
 

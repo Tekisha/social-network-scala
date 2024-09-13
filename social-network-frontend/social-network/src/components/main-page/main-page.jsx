@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import Navbar from '../navbar/navbar.jsx';
 import PostFeed from '../post-feed/post-feed.jsx';
 import CreatePost from '../forms/create-post/create-post.jsx';
-import { decodeJWT } from '../../utils/jwtUtils';
 import './main-page.css';
 
 function MainPage() {

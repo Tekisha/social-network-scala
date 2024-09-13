@@ -14,7 +14,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/home" element={<MainPage />} />
-                <Route path="/profile/:viewedUserId" element={<ProfilePage />} />
+                <Route path="/profile/:userId" element={<ProfilePage />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/post/:postId" element={<PostDetails/>} />
                 <Route path="*" element={<Login />} /> {/* Default route */}

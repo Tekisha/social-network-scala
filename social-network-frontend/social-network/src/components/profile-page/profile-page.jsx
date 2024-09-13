@@ -5,20 +5,10 @@ import EditProfileModal from '../forms/edit-profile/edit-profile-modal.jsx';
 import './profile-page.css';
 import { useParams } from "react-router-dom";
 import PostFeed from "../post-feed/post-feed.jsx";
-
-// Mocked jwtUtils to decode token
-const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
-
-// Mock decode function
-const decodeJWT = (token) => {
-    return {
-        sub: "1234567890",  // Mocked logged-in user ID
-        name: "JohnDoe",     // Mocked username
-    };
-};
+import { decodeJWT } from '../../utils/jwtUtils';
 
 function ProfilePage() {
-    const { viewedUserId } = useParams();
+    const { userId } = useParams();
     const [userInfo, setUserInfo] = useState({
         username: "UserNotFound",
         profilePic: "/src/assets/user-icon.png",
@@ -30,72 +20,80 @@ function ProfilePage() {
     const [showFriendsModal, setShowFriendsModal] = useState(false);
     const [showEditProfileModal, setShowEditProfileModal] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    const token = mockToken;
+    const token = localStorage.getItem("token");
     const decodedToken = decodeJWT(token);
-    const loggedInUserId = decodedToken.sub;
+    const loggedInUserId = decodedToken.userId;
+
+    const fetchUser = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/users/${userId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch user data');
+            }
+
+            const data = await response.json();
+            setUserInfo({
+                username: data.username,
+                profilePic: `${import.meta.env.VITE_BACKEND_URL}${data.profilePhoto}`,
+                isFriend: data.isFriend,
+                isCurrentUser: Number(userId) === loggedInUserId
+            });
+        } catch (error) {
+            setError(error.message);
+            console.error("Error fetching user:", error);
+        }
+    };
+
+    const fetchUserPosts = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/user/${userId}?page=1&pageSize=10`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch user posts');
+            }
+
+            const data = await response.json();
+            console.log(response)
+            const transformedPosts = data.map(postData => ({
+                id: postData.post.id,
+                username: postData.username,
+                content: postData.post.content,
+                likes: postData.likeCount,
+                likedByMe: postData.likedByMe,
+                timestamp: postData.post.createdAt,
+                comments: postData.commentCount,
+                userId: postData.post.userId,
+                profilePhoto: postData.profilePhoto,
+            }));
+
+            setPosts(transformedPosts);
+        } catch (error) {
+            setError(error.message);
+            console.error("Error fetching user posts:", error);
+        }
+    };
 
     useEffect(() => {
         setLoading(true);
-
-        setTimeout(() => {
-            const dummyUserInfo = {
-                userId: viewedUserId,
-                username: viewedUserId === loggedInUserId ? "CurrentUser" : "OtherUser",
-                profilePic: "/src/assets/user-icon.png",
-            };
-
-            const isCurrentUser = viewedUserId === loggedInUserId;
-            const isFriend = !isCurrentUser && dummyUserInfo.username === "OtherUser";
-
-            setUserInfo({
-                ...dummyUserInfo,
-                isCurrentUser,
-                isFriend
-            });
-
-            if (isCurrentUser) {
-                const dummyFriends = [
-                    { id: 1, username: "Friend1", profilePic: "/src/assets/user-icon.png" },
-                    { id: 2, username: "Friend2", profilePic: "/src/assets/user-icon.png" },
-                    { id: 3, username: "Friend3", profilePic: "/src/assets/user-icon.png" }
-                ];
-                setFriends(dummyFriends);
-            }
-
-            setLoading(false);
-        }, 1000);
-
-        setTimeout(() => {
-            const userPosts = [
-                {
-                    id: 1,
-                    user: "OtherUser",
-                    content: "This is another user's post.",
-                    likes: 12,
-                    likedByMe: false,
-                    timestamp: new Date().toISOString(),
-                    comments: 2
-                },
-                {
-                    id: 2,
-                    user: "OtherUser",
-                    content: "Second post from another user!",
-                    likes: 5,
-                    likedByMe: false,
-                    timestamp: new Date().toISOString(),
-                    comments: 1
-                },
-            ];
-            setPosts(userPosts);
-        }, 1500);
-    }, [viewedUserId, loggedInUserId]);
-
-    const handleLike = (postId) => {
-        setPosts(posts.map(post =>
-            post.id === postId ? { ...post, likedByMe: !post.likedByMe, likes: post.likedByMe ? post.likes - 1 : post.likes + 1 } : post
-        ));
-    };
+        fetchUser();
+        fetchUserPosts();
+        setLoading(false);
+    }, [userId]);
 
     const handleAddFriend = () => {
         console.log("Friend request sent");
@@ -125,7 +123,7 @@ function ProfilePage() {
             <Navbar loggedInUserId={loggedInUserId} />
             <div className="profile-page-container">
                 <div className="profile-header">
-                    <img src={userInfo.profilePic} alt="Profile" className="profile-pic"/>
+                    <img src={userInfo.profilePic} alt="Profile" className="profile-pic" />
                     <div className="user-info">
                         <h2 className="username">{userInfo.username}</h2>
                         {userInfo.isCurrentUser && (
@@ -174,13 +172,13 @@ function ProfilePage() {
                         <div className="spinner"></div>
                     ) : (
                         userInfo.isFriend || userInfo.isCurrentUser ? (
-                            <PostFeed posts={posts} handleLike={handleLike} />
+                            <PostFeed posts={posts} />
                         ) : (
                             <p key="become-friends">Become friends to see posts!</p>
                         )
                     )}
                 </div>
-             </div>
+            </div>
         </div>
     );
 }
