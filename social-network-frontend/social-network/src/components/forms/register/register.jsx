@@ -1,18 +1,21 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import '../forms.css';
 
 function Register() {
     const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
+    const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError("");
+        setSuccessMessage("");
 
         if (password !== confirmPassword) {
             setLoading(false);
@@ -20,10 +23,35 @@ function Register() {
             return;
         }
 
-        setTimeout(() => {
-            console.log("Registered successfully:", { username, email, password });
-            setLoading(false);
-        }, 2000);
+        const requestBody = {
+            username,
+            password,
+        };
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/register`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSuccessMessage("Registration successful!");
+                setTimeout(() => {
+                    navigate("/login");
+                }, 2000);
+            } else {
+                setError(data.message || "Registration failed. Please try again.");
+            }
+        } catch (error) {
+            setError("Something went wrong. Please try again later.");
+        }
+
+        setLoading(false);
     };
 
     return (
@@ -36,6 +64,7 @@ function Register() {
                     <h2 className=".form-title">Register</h2>
 
                     {error && <p className="error-message">{error}</p>}
+                    {successMessage && <p className="success-message">{successMessage}</p>}
 
                     <div className="input-group">
                         <label>Username</label>
@@ -44,17 +73,6 @@ function Register() {
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             placeholder="Enter your username"
-                            required
-                        />
-                    </div>
-
-                    <div className="input-group">
-                        <label>Email</label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter your email"
                             required
                         />
                     </div>
