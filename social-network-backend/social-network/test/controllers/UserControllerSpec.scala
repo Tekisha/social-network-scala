@@ -22,7 +22,7 @@ class UserControllerSpec extends TestBase {
       status(result) mustBe CREATED
       val jsonResponse = contentAsJson(result)
       (jsonResponse \ "username").as[String] mustBe "testuser"
-      (jsonResponse \ "profilePhoto").asOpt[String] mustBe None
+      (jsonResponse \ "profilePhoto").asOpt[String].get mustBe "/assets/images/default.png"
     }
 
     "fail to register a user with an existing username" in {
