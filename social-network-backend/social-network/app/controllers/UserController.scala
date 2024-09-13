@@ -13,16 +13,12 @@ import exceptions.UsernameAlreadyExistsException
 import play.api.libs.Files.TemporaryFile
 import java.nio.file.{Files, Path, Paths}
 import utils.FileUtils
-import dtos.UpdateBasicInfo
+import dtos.{UpdateBasicInfo, UserResponse}
 
 @Singleton
 class UserController @Inject()(cc: ControllerComponents, userService: UserService, authAction: AuthAction)(implicit ec: ExecutionContext) extends AbstractController(cc) {
 
   implicit val userFormat: OFormat[User] = Json.format[User]
-
-  // User response that omits sensitive fields like passwordHash
-  case class UserResponse(id: Option[Int], username: String, profilePhoto: Option[String])
-  implicit val userResponseFormat: OFormat[UserResponse] = Json.format[UserResponse]
 
   // Case classes for registration and login data
   case class RegistrationData(username: String, password: String)
@@ -107,8 +103,9 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
   }
 
   def getUserById(id: Int): Action[AnyContent] = authAction.async { implicit request =>
-    userService.getUserById(id).map {
-      case Some(user) => Ok(Json.toJson(UserResponse(user.id, user.username, user.profilePhoto)))
+    val authenticatedUserId = request.userId
+    userService.getUserById(id, authenticatedUserId).map {
+      case Some(userResponse) => Ok(Json.toJson(userResponse))
       case None => NotFound(Json.obj("message" -> s"User with id $id not found"))
     }
   }
@@ -148,9 +145,8 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
     val page = request.getQueryString("page").flatMap(p => scala.util.Try(p.toInt).toOption).getOrElse(1)
     val pageSize = request.getQueryString("pageSize").flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
 
-    userService.searchUsersByUsername(username, page, pageSize).map { paginatedUsers =>
-        val userResponses = paginatedUsers.map(user => UserResponse(user.id, user.username, user.profilePhoto))
-        Ok(Json.toJson(userResponses))
+    userService.searchUsersByUsername(username, request.userId, page, pageSize).map { users =>
+      Ok(Json.toJson(users))
     }
   }
 

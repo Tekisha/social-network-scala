@@ -51,11 +51,34 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
     db.run(users.filter(_.id === userId).map(_.profilePhoto).update(Some(filePath)))
   }
 
-  def searchByUsername(username: String, page: Int, pageSize: Int): Future[Seq[User]] = {
-    val query = users
-      .filter(_.username.toLowerCase.like(s"%${username.toLowerCase}%"))
-      .drop((page - 1) * pageSize)
-      .take(pageSize)
-    db.run(query.result)
+  def searchByUsername(authenticatedUserId: Int, username: String, page: Int, pageSize: Int): Future[Seq[(User, Boolean)]] = {
+    val offset = (page - 1) * pageSize
+
+    val query = sql"""
+    SELECT u.id, u.username, u.profile_photo,
+           EXISTS (
+               SELECT 1 FROM friendships f
+               WHERE (f.user_id1 = u.id AND f.user_id2 = $authenticatedUserId)
+               OR (f.user_id1 = $authenticatedUserId AND f.user_id2 = u.id)
+           ) AS is_friend
+    FROM users u
+    WHERE LOWER(u.username) LIKE LOWER(${s"%$username%"})
+    LIMIT $pageSize OFFSET $offset
+  """.as[(Int, String, Option[String], Boolean)]
+
+    db.run(query).map { result =>
+      result.map { case (id, username, profilePhoto, isFriend) =>
+        val user = User(Some(id), username, "", profilePhoto)
+        (user, isFriend)
+      }
+    }
+  }
+
+  def areFriends(userId1: Int, userId2: Int): Future[Boolean] = {
+    val query = friendships.filter { friendship =>
+      (friendship.userId1 === userId1 && friendship.userId2 === userId2) ||
+        (friendship.userId1 === userId2 && friendship.userId2 === userId1)
+    }
+    db.run(query.exists.result)
   }
 }
