@@ -4,33 +4,49 @@ import SearchInput from '../search-input/search-input.jsx';
 import UsersList from '../user-list/user-list.jsx';
 import './search-page.css';
 
-const mockUsers = [
-    { id: 1, username: 'Friend1', profilePic: '/src/assets/user-icon.png' },
-    { id: 2, username: 'Friend2', profilePic: '/src/assets/user-icon.png' },
-    { id: 3, username: 'Friend3', profilePic: '/src/assets/user-icon.png' },
-    { id: 4, username: 'JohnDoe', profilePic: '/src/assets/user-icon.png' },
-    { id: 5, username: 'JaneSmith', profilePic: '/src/assets/user-icon.png' }
-];
-
 function SearchPage() {
     const [searchTerm, setSearchTerm] = useState('');
-    const [filteredUsers, setFilteredUsers] = useState(mockUsers);
+    const [filteredUsers, setFilteredUsers] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    const token = localStorage.getItem("token");
 
     useEffect(() => {
         if (searchTerm === '') {
-            setFilteredUsers(mockUsers); // Reset when the input is cleared
+            setFilteredUsers([]);
         } else {
-            const lowercasedFilter = searchTerm.toLowerCase();
-            const filtered = mockUsers.filter(user =>
-                user.username.toLowerCase().includes(lowercasedFilter)
-            );
-            setFilteredUsers(filtered);
+            const fetchUsers = async () => {
+                setLoading(true);
+                setError(null);
+                try {
+                    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/users/search?username=${searchTerm}&page=1&pageSize=10`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch users');
+                    }
+
+                    const data = await response.json();
+                    setFilteredUsers(data);
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            fetchUsers();
         }
-    }, [searchTerm]);
+    }, [searchTerm, token]);
 
     return (
         <div className="search-page-wrapper">
-            {/* Add Navbar */}
             <Navbar />
 
             <div className="search-page-container">
@@ -40,7 +56,13 @@ function SearchPage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search for users..."
                 />
-                <UsersList title="Search Results" users={filteredUsers} />
+
+                {loading && <div>Loading...</div>}
+                {error && <div className="error-message">{error}</div>}
+
+                {!loading && !error && (
+                    <UsersList title="Search Results" users={filteredUsers} />
+                )}
             </div>
         </div>
     );
