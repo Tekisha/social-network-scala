@@ -18,7 +18,7 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
       case Some(_) => Future.failed(new UsernameAlreadyExistsException())
       case None =>
         val hashedPassword = PasswordUtils.hashPassword(password)
-        val newUser = User(None, username, hashedPassword, None)
+        val newUser = User(None, username, hashedPassword,  Some("/assets/images/default.png"))
         userRepository.createNewUser(newUser)
     }
   }
