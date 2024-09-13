@@ -17,7 +17,7 @@ function CreatePost({ onSubmit, placeholder }) {
                 <textarea
                     value={newPost}
                     onChange={(e) => setNewPost(e.target.value)}
-                    placeholder={placeholder}  // Set custom placeholder
+                    placeholder={placeholder}
                     rows="3"
                     className="create-post-textarea"
                 ></textarea>

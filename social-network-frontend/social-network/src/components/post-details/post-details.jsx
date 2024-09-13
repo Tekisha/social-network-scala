@@ -67,6 +67,35 @@ function PostDetails() {
         }
     };
 
+    const handleCreateComment = async (commentText) => {
+        const token = localStorage.getItem('token');
+
+        const requestBody = {
+            content: commentText,
+            parentCommentId: null,
+        };
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/${postId}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(requestBody),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                setComments((prevComments) => [...prevComments, data]);
+            } else {
+                console.error('Error creating comment:', data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
     useEffect(() => {
         fetchPostDetails();
         fetchComments();
@@ -83,7 +112,7 @@ function PostDetails() {
             <div className="post-details-container">
                 <Post post={post} />
 
-                <CreatePost placeholder="Write a comment..." />
+                <CreatePost onSubmit={handleCreateComment} placeholder="Write a comment..." />
 
                 <div className="comments-section">
                     <h3>Comments</h3>

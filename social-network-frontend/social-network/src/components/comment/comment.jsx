@@ -29,7 +29,7 @@ function Comment({ comment }) {
     return (
         <div className="comment">
             <div className="comment-header">
-                <span className="comment-user">User {comment.comment.id}</span>
+                <span className="comment-user">{comment.username}</span>
                 <span className="comment-time">{new Date(comment.comment.createdAt).toLocaleString()}</span>
             </div>
             <p className="comment-content">{comment.comment.content}</p>
