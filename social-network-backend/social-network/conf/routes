@@ -25,6 +25,9 @@ GET     /posts/user/:userId      controllers.PostController.getUserPosts(userId:
 GET     /posts                   controllers.PostController.getAllPosts
 GET     /posts/friends           controllers.PostController.getFriendsPosts
 GET     /posts/:postId           controllers.PostController.getPostById(postId: Int)
+POST    /posts/:postId/comments               controllers.CommentController.createComment(postId: Int)
+GET     /posts/:postId/comments               controllers.CommentController.getComments(postId: Int)
+DELETE  /comments/:commentId    controllers.CommentController.deleteComment(commentId: Int)
 
 # Friend request routes
 POST    /friendRequests                        controllers.FriendRequestController.sendFriendRequest
