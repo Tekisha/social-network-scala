@@ -18,7 +18,7 @@ function Post({ post }) {
     };
 
     const handlePostClick = () => {
-        navigate(`/post/${post.id}`, { state: { loggedInUserId } });
+        navigate(`/post/${post.id}`);
     };
 
     const handleLike = async (e) => {

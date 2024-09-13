@@ -1,56 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Post from '../post/Post';
 import Comment from '../comment/comment.jsx';
 import CreatePost from '../forms/create-post/create-post.jsx';
 import Navbar from '../navbar/navbar.jsx';
 import './post-details.css';
 
-function PostDetails({ postId }) {
-    const location = useLocation();
-    const loggedInUserId = location.state.loggedInUserId;
-
+function PostDetails() {
+    const { postId } = useParams();
     const [post, setPost] = useState(null);
-    const [comments, setComments] = useState([]);
+    const [comments] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const fetchPostDetails = async () => {
-        const mockPost = {
-            id: postId,
-            user: 'JohnDoe',
-            content: 'This is a sample post content.',
-            likes: 45,
-            comments: 2,
-            likedByMe: false,
-            timestamp: new Date(),
-        };
+        const token = localStorage.getItem('token');
 
-        const mockComments = [
-            { id: 1, user: 'User1', content: 'Great post!', likes: 5, comments: 0, likedByMe: false, timestamp: new Date(), replies: [] },
-            { id: 2, user: 'User2', content: 'Thanks for sharing!', likes: 3, comments: 0, likedByMe: false, timestamp: new Date(), replies: [] },
-        ];
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/${postId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
 
-        setPost(mockPost);
-        setComments(mockComments);
-    };
-
-    const handleCommentSubmit = async (commentText) => {
-        const newCommentObj = { id: comments.length + 1, user: 'CurrentUser', content: commentText, likes: 0, comments: 0, likedByMe: false, timestamp: new Date(), replies: [] };
-        setComments([...comments, newCommentObj]);
-    };
-
-    const handleLike = (postId) => {
-        setPost((prevPost) => ({
-            ...prevPost,
-            likedByMe: !prevPost.likedByMe,
-            likes: prevPost.likedByMe ? prevPost.likes - 1 : prevPost.likes + 1,
-        }));
+            const data = await response.json();
+            if (response.ok) {
+                const postDetails = {
+                    id: data.post.id,
+                    user: 'User' + data.post.userId,
+                    content: data.post.content,
+                    likes: data.likeCount,
+                    likedByMe: data.likedByMe,
+                    comments: data.commentCount,
+                    timestamp: data.post.createdAt,
+                };
+                setPost(postDetails);
+                setLoading(false);
+            } else {
+                console.error('Error fetching post details:', data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
     };
 
     useEffect(() => {
         fetchPostDetails();
     }, [postId]);
 
-    if (!post) {
+    if (loading) {
         return <div>Loading...</div>;
     }
 
@@ -58,9 +57,9 @@ function PostDetails({ postId }) {
         <div className="post-details-wrapper">
             <Navbar />
             <div className="post-details-container">
-                <Post post={post} loggedInUserId={loggedInUserId} handleLike={handleLike} />
+                <Post post={post} />
 
-                <CreatePost onSubmit={handleCommentSubmit} placeholder="Write a comment..." />
+                <CreatePost placeholder="Write a comment..." />
 
                 <div className="comments-section">
                     <h3>Comments</h3>
@@ -68,7 +67,7 @@ function PostDetails({ postId }) {
                         <p>No comments yet.</p>
                     ) : (
                         comments.map(comment => (
-                            <Comment key={comment.id} comment={comment} handleLike={handleLike} handleReplySubmit={handleCommentSubmit} />
+                            <Comment key={comment.id} comment={comment} />
                         ))
                     )}
                 </div>
