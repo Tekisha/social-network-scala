@@ -21,6 +21,11 @@ function Post({ post }) {
         navigate(`/post/${post.id}`);
     };
 
+    const handleProfileClick = (e) => {
+        e.stopPropagation();
+        navigate(`/profile/${post.userId}`);
+    };
+
     const handleLike = async (e) => {
         e.stopPropagation();
 
@@ -64,8 +69,9 @@ function Post({ post }) {
     return (
         <div className="post" onClick={handlePostClick}>
             <div className="post-header">
-                <div className="user-info">
-                    <img src="/src/assets/user-icon.png" alt="User" className="post-user-icon" />
+                <div className="user-info" onClick={handleProfileClick}>
+                    <img src={`${import.meta.env.VITE_BACKEND_URL}${post.profilePhoto || "/assets/images/default-user.png"}`}
+                         alt="User" className="post-user-icon" />
                     <span className="post-user">{post.user}</span>
                 </div>
                 <span className="post-time">{formatTime(post.timestamp)}</span>

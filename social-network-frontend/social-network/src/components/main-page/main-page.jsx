@@ -32,6 +32,7 @@ function MainPage() {
                         likedByMe: item.likedByMe,
                         timestamp: item.post.createdAt,
                         comments: item.commentCount,
+                        userId: item.post.userId,
                     }));
                     setPosts(formattedPosts);
                 } else {
@@ -77,6 +78,7 @@ function MainPage() {
                     likedByMe: data.likedByMe,
                     timestamp: data.post.createdAt,
                     comments: data.commentCount,
+                    userId: data.post.userId,
                 };
                 setPosts([newPost, ...posts]);
             } else {

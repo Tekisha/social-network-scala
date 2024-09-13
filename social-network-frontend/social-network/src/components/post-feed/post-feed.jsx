@@ -1,31 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Post from '../post/post.jsx';
 
-const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
-
-const decodeJWT = (token) => {
-    return {
-        sub: "1234567890",
-        name: "JohnDoe",
-    };
-};
-
 function PostFeed({ posts }) {
-    const [user, setUser] = useState(null);
-
-    useEffect(() => {
-        const decodedUser = decodeJWT(mockToken);
-        setUser(decodedUser);
-    }, []);
-
-    if (!user) {
+    if (!posts) {
         return <div>Loading...</div>;
     }
 
     return (
         <div className="feed-container">
             {posts.map(post => (
-                <Post key={post.id} post={post} loggedInUserId={user.sub} />
+                <Post key={post.id} post={post} />
             ))}
         </div>
     );

@@ -34,6 +34,7 @@ function PostDetails() {
                     likedByMe: data.likedByMe,
                     comments: data.commentCount,
                     timestamp: data.post.createdAt,
+                    userId: data.post.userId,
                 };
                 setPost(postDetails);
             } else {
