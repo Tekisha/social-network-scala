@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { decodeJWT } from '../../utils/jwtUtils';
 import './post.css';
 
-function Post({ post, loggedInUserId }) {
+function Post({ post }) {
     const navigate = useNavigate();
+    const token = localStorage.getItem("token");
+    const decodedToken = decodeJWT(token);
+    const loggedInUserId = decodedToken.userId;
+
     const [liked, setLiked] = useState(post.likedByMe);
     const [likesCount, setLikesCount] = useState(post.likes);
 
@@ -16,10 +21,34 @@ function Post({ post, loggedInUserId }) {
         navigate(`/post/${post.id}`, { state: { loggedInUserId } });
     };
 
-    const handleLike = (e) => {
+    const handleLike = async (e) => {
         e.stopPropagation();
-        setLiked(!liked);
-        setLikesCount(liked ? likesCount - 1 : likesCount + 1);
+
+        try {
+            const endpoint = liked
+                ? `${import.meta.env.VITE_BACKEND_URL}/posts/${post.id}/unlike`
+                : `${import.meta.env.VITE_BACKEND_URL}/posts/${post.id}/like`;
+
+            const method = liked ? "DELETE" : "POST";
+
+            const response = await fetch(endpoint, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                setLiked(!liked);
+                setLikesCount(liked ? likesCount - 1 : likesCount + 1);
+            } else {
+                const data = await response.json();
+                console.error("Failed to like/unlike the post:", data.message);
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
     };
 
     const handleEdit = (e) => {

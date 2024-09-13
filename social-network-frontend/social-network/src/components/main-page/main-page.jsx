@@ -7,24 +7,45 @@ import './main-page.css';
 
 function MainPage() {
     const [posts, setPosts] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-    }, []);
+        const fetchPosts = async () => {
+            const token = localStorage.getItem("token");
 
-    const handleLike = (postId) => {
-        setPosts(
-            posts.map((post) =>
-                post.id === postId
-                    ? {
-                        ...post,
-                        likedByMe: !post.likedByMe,
-                        likes: post.likedByMe ? post.likes - 1 : post.likes + 1,
-                    }
-                    : post
-            )
-        );
-    };
+            try {
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/friends`, {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const formattedPosts = data.map((item) => ({
+                        id: item.post.id,
+                        user: "Username",
+                        content: item.post.content,
+                        likes: item.likeCount,
+                        likedByMe: item.likedByMe,
+                        timestamp: item.post.createdAt,
+                        comments: item.commentCount,
+                    }));
+                    setPosts(formattedPosts);
+                } else {
+                    console.error("Failed to fetch posts", data.message);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPosts();
+    }, []);
 
     const handleCreatePost = async (newPostContent) => {
         const token = localStorage.getItem("token");
@@ -71,7 +92,7 @@ function MainPage() {
             <Navbar />
             <div className="main-page-container">
                 <CreatePost onSubmit={handleCreatePost} placeholder="What's on your mind?" />
-                {loading ? <div className="spinner"></div> : <PostFeed posts={posts} handleLike={handleLike} />}
+                {loading ? <div className="spinner"></div> : <PostFeed posts={posts} />}
             </div>
         </div>
     );

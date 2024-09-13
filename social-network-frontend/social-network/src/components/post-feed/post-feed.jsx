@@ -10,7 +10,7 @@ const decodeJWT = (token) => {
     };
 };
 
-function PostFeed({ posts, handleLike }) {
+function PostFeed({ posts }) {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
@@ -25,7 +25,7 @@ function PostFeed({ posts, handleLike }) {
     return (
         <div className="feed-container">
             {posts.map(post => (
-                <Post key={post.id} post={post} handleLike={handleLike} loggedInUserId={user.sub} />
+                <Post key={post.id} post={post} loggedInUserId={user.sub} />
             ))}
         </div>
     );
