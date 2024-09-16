@@ -115,3 +115,54 @@
     transform: translateY(-2px);
 }
 
+.edit-post-textarea {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    resize: none;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.edit-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.save-button, .cancel-button {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.save-button {
+    background-color: #0095f6;
+    color: white;
+}
+
+.save-button:hover {
+    background-color: #007bb5;
+}
+
+.cancel-button {
+    background-color: #ccc;
+    color: white;
+}
+
+.cancel-button:hover {
+    background-color: #999;
+}
+
+.error-message {
+    color: #ff4d4f;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+

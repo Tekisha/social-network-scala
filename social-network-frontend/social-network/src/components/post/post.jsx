@@ -11,14 +11,19 @@ function Post({ post, onDelete }) {
 
     const [liked, setLiked] = useState(post.likedByMe);
     const [likesCount, setLikesCount] = useState(post.likes);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedContent, setEditedContent] = useState(post.content);
+    const [error, setError] = useState(null);
 
     const formatTime = (timestamp) => {
         const date = new Date(timestamp);
         return date.toLocaleDateString() + ' at ' + date.toLocaleTimeString();
     };
 
-    const handlePostClick = () => {
-        navigate(`/post/${post.id}`);
+    const handlePostClick = (e) => {
+        if (!isEditing) {
+            navigate(`/post/${post.id}`);
+        }
     };
 
     const handleProfileClick = (e) => {
@@ -58,7 +63,44 @@ function Post({ post, onDelete }) {
 
     const handleEdit = (e) => {
         e.stopPropagation();
-        console.log("Edit post", post.id);
+        setIsEditing(true);
+    };
+
+    const handleCancelEdit = (e) => {
+        e.stopPropagation();
+        setIsEditing(false);
+        setEditedContent(post.content);
+    };
+
+    const handleSaveEdit = async (e) => {
+        e.stopPropagation();
+        if (!editedContent) {
+            setError("Content cannot be empty.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/${post.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ content: editedContent }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update post');
+            }
+
+            const data = await response.json();
+            post.content = data.post.content;
+            post.updatedAt = data.post.updatedAt;
+            setIsEditing(false);
+        } catch (error) {
+            setError(error.message);
+            console.error("Error updating post:", error);
+        }
     };
 
     const handleDelete = async (e) => {
@@ -96,7 +138,27 @@ function Post({ post, onDelete }) {
                 </div>
                 <span className="post-time">{formatTime(post.timestamp)}</span>
             </div>
-            <p className="post-content">{post.content}</p>
+
+            <div className="post-content" onClick={(e) => e.stopPropagation()}>
+                {isEditing ? (
+                    <>
+                        <textarea
+                            className="edit-post-textarea"
+                            value={editedContent}
+                            onChange={(e) => setEditedContent(e.target.value)}
+                            rows="4"
+                        />
+                        {error && <p className="error-message">{error}</p>}
+                        <div className="edit-actions">
+                            <button className="save-button" onClick={handleSaveEdit}>Save</button>
+                            <button className="cancel-button" onClick={handleCancelEdit}>Cancel</button>
+                        </div>
+                    </>
+                ) : (
+                    <p>{post.content}</p>
+                )}
+            </div>
+
             <div className="post-actions">
                 <div onClick={handleLike} className={`like-button ${liked ? 'liked' : ''}`}>
                     <i className="fas fa-thumbs-up"></i>
@@ -108,12 +170,16 @@ function Post({ post, onDelete }) {
                 </div>
                 {post.userId === loggedInUserId && (
                     <div className="post-actions-extra">
-                        <button className="edit-post-button" onClick={handleEdit}>
-                            <i className="fas fa-edit"></i>
-                        </button>
-                        <button className="delete-post-button" onClick={handleDelete}>
-                            <i className="fas fa-trash"></i>
-                        </button>
+                        {!isEditing && (
+                            <>
+                                <button className="edit-post-button" onClick={handleEdit}>
+                                    <i className="fas fa-edit"></i>
+                                </button>
+                                <button className="delete-post-button" onClick={handleDelete}>
+                                    <i className="fas fa-trash"></i>
+                                </button>
+                            </>
+                        )}
                     </div>
                 )}
             </div>

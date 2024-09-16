@@ -13,8 +13,6 @@ function PostFeed({ posts }) {
         return <div>Loading...</div>;
     }
 
-    console.log(postList)
-
     return (
         <div className="feed-container">
             {postList.map(post => (
