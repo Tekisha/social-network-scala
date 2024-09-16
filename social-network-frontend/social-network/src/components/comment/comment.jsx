@@ -3,28 +3,47 @@ import CreatePost from '../forms/create-post/create-post.jsx';
 import "./comment.css";
 import { Link } from 'react-router-dom';
 
-function Comment({ comment }) {
+function Comment({ comment, postId, token }) {
     const [showReplies, setShowReplies] = useState(false);
     const [replies, setReplies] = useState(comment.replies || []);
     const [replying, setReplying] = useState(false);
+    const [error, setError] = useState(null);
 
     const toggleReplies = () => {
         setShowReplies(!showReplies);
     };
 
-    const handleReply = (replyText) => {
-        const newReply = {
-            id: replies.length + 1,
-            user: 'CurrentUser',
-            content: replyText,
-            likes: 0,
-            comments: 0,
-            likedByMe: false,
-            timestamp: new Date(),
-            replies: []
-        };
-        setReplies([...replies, newReply]);
-        setReplying(false);
+    const handleReply = async (replyText) => {
+        setError(null);
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/${postId}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    content: replyText,
+                    parentCommentId: comment.comment.id,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to post reply');
+            }
+
+            const data = await response.json();
+            const newReply = {
+                comment: data.comment,
+                username: data.username,
+                profilePhoto: data.profilePhoto,
+                replies: [],
+            };
+            setReplies([...replies, newReply]);
+            setReplying(false);
+        } catch (error) {
+            setError(error.message);
+        }
     };
 
     return (
@@ -60,12 +79,17 @@ function Comment({ comment }) {
                 </div>
             </div>
 
-            {replying && <CreatePost onSubmit={handleReply} placeholder="Write a reply..." />}
+            {replying && (
+                <div className="create-reply">
+                    <CreatePost onSubmit={handleReply} placeholder="Write a reply..." />
+                    {error && <p className="error-message">{error}</p>}
+                </div>
+            )}
 
             {showReplies && (
                 <div className="replies">
                     {replies.map(reply => (
-                        <Comment key={reply.comment.id} comment={reply} />
+                        <Comment key={reply.comment.id} comment={reply} postId={postId} token={token} />
                     ))}
                 </div>
             )}

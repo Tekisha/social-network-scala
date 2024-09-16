@@ -11,10 +11,9 @@ function PostDetails() {
     const [post, setPost] = useState(null);
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const token = localStorage.getItem('token');
 
     const fetchPostDetails = async () => {
-        const token = localStorage.getItem('token');
-
         try {
             const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/${postId}`, {
                 method: 'GET',
@@ -122,7 +121,7 @@ function PostDetails() {
                         <p>No comments yet.</p>
                     ) : (
                         comments.map((comment) => (
-                            <Comment key={comment.comment.id} comment={comment} />
+                            <Comment key={comment.comment.id} comment={comment} postId={postId} token={token}/>
                         ))
                     )}
                 </div>
