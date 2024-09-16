@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { decodeJWT } from '../../utils/jwtUtils';
 import './post.css';
 
-function Post({ post }) {
+function Post({ post, onDelete }) {
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
     const decodedToken = decodeJWT(token);
@@ -61,9 +61,29 @@ function Post({ post }) {
         console.log("Edit post", post.id);
     };
 
-    const handleDelete = (e) => {
+    const handleDelete = async (e) => {
         e.stopPropagation();
-        console.log("Delete post", post.id);
+        const confirmed = window.confirm("Are you sure you want to delete this post?");
+
+        if (confirmed) {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/${post.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                    },
+                });
+
+                if (response.ok) {
+                    console.log("Post deleted successfully");
+                    onDelete(post.id);
+                } else {
+                    console.error("Failed to delete post");
+                }
+            } catch (error) {
+                console.error("Error deleting post:", error);
+            }
+        }
     };
 
     return (
