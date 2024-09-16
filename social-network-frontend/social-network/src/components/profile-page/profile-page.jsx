@@ -22,6 +22,7 @@ function ProfilePage() {
     const [showEditProfileModal, setShowEditProfileModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [notification, setNotification] = useState('');
 
     const token = localStorage.getItem("token");
     const decodedToken = decodeJWT(token);

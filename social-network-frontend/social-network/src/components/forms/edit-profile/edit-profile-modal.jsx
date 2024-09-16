@@ -36,6 +36,7 @@ function EditProfileModal({ userInfo, onClose, refreshUser }) {
             localStorage.setItem("token", data.token);
             console.log("User info updated successfully:", data);
             refreshUser();
+            alert("User info updated successfully!");
             onClose();
         } catch (error) {
             setError(error.message);
@@ -69,6 +70,7 @@ function EditProfileModal({ userInfo, onClose, refreshUser }) {
             const data = await response.json();
             console.log("Password updated successfully:", data);
             refreshUser();
+            alert("Password updated successfully!");
             onClose();
         } catch (error) {
             setError(error.message);
@@ -101,6 +103,7 @@ function EditProfileModal({ userInfo, onClose, refreshUser }) {
             const data = await response.json();
             console.log("Profile photo updated successfully:", data);
             refreshUser();
+            alert("Profile photo updated successfully!");
             onClose();
         } catch (error) {
             setError(error.message);
