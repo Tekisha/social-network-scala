@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './edit-profile-modal.css';
 
-function EditProfileModal({ userInfo, onClose, onSaveBasicInfo, onSavePassword, onSaveProfilePic }) {
+function EditProfileModal({ userInfo, onClose, refreshUser }) {
     const [username, setUsername] = useState(userInfo.username);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -9,6 +9,7 @@ function EditProfileModal({ userInfo, onClose, onSaveBasicInfo, onSavePassword, 
     const [profilePic, setProfilePic] = useState(null);
     const [selectedFileName, setSelectedFileName] = useState('No file chosen');
     const [error, setError] = useState(null);
+    const token = localStorage.getItem("token");
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -16,25 +17,95 @@ function EditProfileModal({ userInfo, onClose, onSaveBasicInfo, onSavePassword, 
         setSelectedFileName(file ? file.name : 'No file chosen');
     };
 
-    const handleSaveBasicInfo = () => {
-        if (username) {
-            onSaveBasicInfo({ username });
+    const handleSaveBasicInfo = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/users/me`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ username })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update user info');
+            }
+
+            const data = await response.json();
+            localStorage.setItem("token", data.token);
+            console.log("User info updated successfully:", data);
+            refreshUser();
+            onClose();
+        } catch (error) {
+            setError(error.message);
+            console.error("Error updating user info:", error);
         }
-        onClose();
     };
 
-    const handleSavePassword = () => {
+    const handleSavePassword = async () => {
         if (password !== confirmPassword) {
             setError("New passwords do not match");
             return;
         }
-        onSavePassword({ currentPassword, newPassword: password });
-        onClose();
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/users/me/password`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    oldPassword: currentPassword,
+                    newPassword: password
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update password');
+            }
+
+            const data = await response.json();
+            console.log("Password updated successfully:", data);
+            refreshUser();
+            onClose();
+        } catch (error) {
+            setError(error.message);
+            console.error("Error updating password:", error);
+        }
     };
 
-    const handleSaveProfilePic = () => {
-        onSaveProfilePic({ profilePic });
-        onClose();
+    const handleSaveProfilePic = async () => {
+        if (!profilePic) {
+            setError("Please select a profile picture to upload.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("profile_photo", profilePic);
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/users/profile-photo`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update profile photo');
+            }
+
+            const data = await response.json();
+            console.log("Profile photo updated successfully:", data);
+            refreshUser();
+            onClose();
+        } catch (error) {
+            setError(error.message);
+            console.error("Error updating profile photo:", error);
+        }
     };
 
     return (

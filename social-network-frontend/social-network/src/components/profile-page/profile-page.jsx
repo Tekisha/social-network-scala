@@ -212,8 +212,8 @@ function ProfilePage() {
         setShowEditProfileModal(!showEditProfileModal);
     };
 
-    const handleSaveProfile = (updatedInfo) => {
-        setUserInfo({ ...userInfo, username: updatedInfo.username });
+    const refreshUser = () => {
+        fetchUser();
     };
 
     return (
@@ -264,7 +264,7 @@ function ProfilePage() {
                     <EditProfileModal
                         userInfo={userInfo}
                         onClose={toggleEditProfileModal}
-                        onSave={handleSaveProfile}
+                        refreshUser={refreshUser}
                     />
                 )}
 
