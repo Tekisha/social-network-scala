@@ -1,46 +1,78 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../navbar/navbar.jsx';
 import './friend-requests-page.css';
 
 function FriendRequestsPage() {
     const [friendRequests, setFriendRequests] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [pageSize] = useState(10);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMoreRequests, setHasMoreRequests] = useState(true);
+    const hasFetchedRequests = useRef(false);
     const navigate = useNavigate();
 
     const token = localStorage.getItem("token");
 
-    useEffect(() => {
-        const fetchFriendRequests = async () => {
-            setLoading(true);
-            setError(null);
+    const fetchFriendRequests = async (currentPage) => {
+        if (hasFetchedRequests.current && currentPage === 1) {
+            return;
+        }
 
-            try {
-                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/friendRequests/receivedPending?page=1&pageSize=10`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
+        if (currentPage === 1) {
+            hasFetchedRequests.current = true;
+        }
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch friend requests');
-                }
+        setLoadingMore(true);
 
-                const data = await response.json();
-                const pendingRequests = data.filter(request => request.status === 'pending');
-                setFriendRequests(pendingRequests);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/friendRequests/receivedPending?page=${currentPage}&pageSize=${pageSize}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch friend requests');
             }
-        };
 
-        fetchFriendRequests();
-    }, [token]);
+            const data = await response.json();
+            const pendingRequests = data.filter(request => request.status === 'pending');
+
+            setFriendRequests((prevRequests) => [...prevRequests, ...pendingRequests]);
+
+            if (pendingRequests.length < pageSize) {
+                setHasMoreRequests(false);
+            }
+        } catch (err) {
+            console.error(err.message);
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchFriendRequests(page);
+    }, [page]);
+
+    const handleScroll = () => {
+        const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
+        const documentHeight = document.documentElement.offsetHeight;
+
+        if (scrollPosition >= documentHeight - 100 && !loadingMore && hasMoreRequests) {
+            setLoadingMore(true);
+            setPage((prevPage) => prevPage + 1);
+        }
+    };
+
+    useEffect(() => {
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [loadingMore, hasMoreRequests]);
 
     const handleRespondToRequest = async (requestId, status) => {
         try {
@@ -60,7 +92,7 @@ function FriendRequestsPage() {
             alert(`Successfully ${status} the friend request`);
             setFriendRequests(friendRequests.filter(request => request.id !== requestId));
         } catch (err) {
-            setError(err.message);
+            console.error(err.message);
         }
     };
 
@@ -83,9 +115,8 @@ function FriendRequestsPage() {
                 <h1 className="friend-requests-title">Friend Requests</h1>
 
                 {loading && <div>Loading...</div>}
-                {error && <div className="error-message">{error}</div>}
 
-                {!loading && !error && friendRequests.length > 0 ? (
+                {friendRequests.length > 0 ? (
                     <ul className="friend-requests-list">
                         {friendRequests.map(request => (
                             <li key={request.id} className="friend-request-item">
@@ -107,6 +138,8 @@ function FriendRequestsPage() {
                 ) : (
                     <p>No pending friend requests.</p>
                 )}
+
+                {loadingMore && <div className="spinner">Loading more requests...</div>}
             </div>
         </div>
     );
