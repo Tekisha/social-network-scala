@@ -74,6 +74,8 @@ function ProfilePage() {
             hasFetchedPosts.current = true;
         }
 
+        setLoading(true);
+
         try {
             const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/user/${userId}?page=${pageToFetch}&pageSize=${pageSize}`, {
                 method: 'GET',
@@ -124,21 +126,15 @@ function ProfilePage() {
     };
 
     useEffect(() => {
-        setLoading(true);
         fetchUser();
     }, [userId]);
 
     useEffect(() => {
+        // Only fetch posts when userInfo is available (not default values)
         if (userInfo.isFriend || userInfo.isCurrentUser) {
             fetchUserPosts(page);
         }
     }, [userInfo, page]);
-
-    useEffect(() => {
-        if (page > 1) {
-            fetchUserPosts(page);
-        }
-    }, [page]);
 
     useEffect(() => {
         window.addEventListener("scroll", handleScroll);
