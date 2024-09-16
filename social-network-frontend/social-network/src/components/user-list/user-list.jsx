@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './user-list.css';
 
-function UsersList({ title, users, closeModal }) {
+function UsersList({ title, users, closeModal, loading }) {
     return (
         <div className="users-list-container">
             <h3 className="users-list-title">{title}</h3>
@@ -24,6 +24,7 @@ function UsersList({ title, users, closeModal }) {
             ) : (
                 <p>No users found.</p>
             )}
+            {loading && <div className="spinner">Loading more users...</div>}
         </div>
     );
 }

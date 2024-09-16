@@ -25,6 +25,10 @@ function ProfilePage() {
     const [hasMorePosts, setHasMorePosts] = useState(true);
     const [page, setPage] = useState(1);
     const pageSize = 4;
+    const [hasMoreFriends, setHasMoreFriends] = useState(true);
+    const [friendPage, setFriendPage] = useState(1);
+    const friendPageSize = 50;
+    const hasFetchedFriends = useRef(false);
 
     const token = localStorage.getItem("token");
     const decodedToken = decodeJWT(token);
@@ -140,9 +144,17 @@ function ProfilePage() {
     }, [loading, hasMorePosts]);
 
 
-    const fetchFriends = async () => {
+    const fetchFriends = async (currentPage = 1) => {
+        if (hasFetchedFriends.current && currentPage === 1) {
+            return;
+        }
+
+        if (currentPage === 1) {
+            hasFetchedFriends.current = true;
+        }
+
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/friendships?page=1&pageSize=10`, {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/friendships?page=${currentPage}&pageSize=${friendPageSize}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -160,16 +172,43 @@ function ProfilePage() {
                 id: friend.friendId
             }));
 
-            setFriends(transformedFriends);
+            if (transformedFriends.length < friendPageSize) {
+                setHasMoreFriends(false);
+            }
+
+            setFriends(prevFriends => [...prevFriends, ...transformedFriends]);
         } catch (error) {
             setError(error.message);
             console.error("Error fetching friends:", error);
         }
     };
 
+
+    const handleFriendsScroll = () => {
+        const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
+        const documentHeight = document.documentElement.offsetHeight;
+
+        if (scrollPosition >= documentHeight - 100 && hasMoreFriends) {
+            setFriendPage(prevPage => prevPage + 1);
+        }
+    };
+
     useEffect(() => {
-        fetchFriends();
-    }, [userId]);
+        if (friendPage > 1) {
+            fetchFriends(friendPage);
+        }
+    }, [friendPage]);
+
+    useEffect(() => {
+        window.addEventListener("scroll", handleFriendsScroll);
+        return () => window.removeEventListener("scroll", handleFriendsScroll);
+    }, [hasMoreFriends]);
+
+    useEffect(() => {
+        if (showFriendsModal) {
+            fetchFriends(1); // Fetch first page when the modal opens
+        }
+    }, [showFriendsModal]);
 
     const handleAddFriend = async () => {
         try {
@@ -296,7 +335,12 @@ function ProfilePage() {
                             <button className="close-modal-button" onClick={toggleFriendsModal}>
                                 <i className="fas fa-times"></i>
                             </button>
-                            <UsersList title="Friends" users={friends} closeModal={toggleFriendsModal} />
+                            <UsersList
+                                title="Friends"
+                                users={friends}
+                                closeModal={toggleFriendsModal}
+                                loading={loading}
+                            />
                         </div>
                     </div>
                 )}

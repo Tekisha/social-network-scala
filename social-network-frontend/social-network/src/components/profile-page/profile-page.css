@@ -123,6 +123,7 @@
 }
 
 .close-modal-button {
+    padding: 0 !important;
     position: absolute;
     top: 10px;
     right: 10px;
@@ -130,8 +131,7 @@
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
-    padding: 0;
-    width: 2rem;
+    width: 2rem !important;
     color: white;
 }
 
