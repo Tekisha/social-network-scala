@@ -1,22 +1,15 @@
-import React, {useState} from 'react';
+import React from 'react';
 import Post from '../post/post.jsx';
 
-function PostFeed({ posts }) {
-    const [postList, setPostList] = useState(posts);
-
-    const handleDelete = (postId) => {
-        console.log(postId)
-        setPostList(postList.filter(post => post.id !== postId));
-    };
-
-    if (!postList) {
-        return <div>Loading...</div>;
+function PostFeed({ posts, onDeletePost }) {
+    if (!posts || posts.length === 0) {
+        return <div>No posts available.</div>;
     }
 
     return (
         <div className="feed-container">
-            {postList.map(post => (
-                <Post key={post.id} post={post} onDelete={handleDelete} />
+            {posts.map((post, index) => (
+                <Post key={`${post.id}-${index}`} post={post} onDelete={onDeletePost} />
             ))}
         </div>
     );
