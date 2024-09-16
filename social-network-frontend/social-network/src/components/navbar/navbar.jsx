@@ -35,6 +35,7 @@ function Navbar() {
                 <a href={`/profile/${loggedInUserId}`} className={getActiveClass("/profile")}><i
                     className="fas fa-user"></i> Profile</a>
                 <a href="/search" className={getActiveClass("/search")}><i className="fas fa-search"></i> Search</a>
+                <a href="/friend-requests" className={getActiveClass("/friend-requests")}><i className="fas fa-user-friends"></i> Requests</a>
                 <a href="#" onClick={handleLogout}><i className="fas fa-sign-out-alt"></i> Logout</a>
             </nav>
         </header>
