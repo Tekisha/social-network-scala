@@ -6,6 +6,7 @@ import MainPage from "./components/main-page/main-page.jsx";
 import ProfilePage from "./components/profile-page/profile-page.jsx";
 import SearchPage from "./components/search-page/search-page.jsx";
 import PostDetails from "./components/post-details/post-details.jsx";
+import FriendRequestsPage from "./components/friend-requests-page/friend-requests-page.jsx";
 
 function App() {
     return (
@@ -17,6 +18,7 @@ function App() {
                 <Route path="/profile/:userId" element={<ProfilePage />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/post/:postId" element={<PostDetails/>} />
+                <Route path="/friend-requests" element={<FriendRequestsPage/>} />
                 <Route path="*" element={<Login />} /> {/* Default route */}
             </Routes>
         </Router>

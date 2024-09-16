@@ -74,8 +74,8 @@ h1, h2 {
   opacity: 0.5;
 }
 
-/* Button styles */
-button {
+/* Global button styles for all buttons except accept and reject */
+button:not([data-button-type="accept"]):not([data-button-type="reject"]) {
   width: 100%;
   padding: 0.75rem;
   color: white;
@@ -89,18 +89,40 @@ button {
   background: linear-gradient(90deg, #0095f6, #007bb5);
 }
 
-button:hover {
+button:not([data-button-type="accept"]):not([data-button-type="reject"]):hover {
   background-color: #007bb5;
   transform: translateY(-2px);
 }
 
-button:active {
+button:not([data-button-type="accept"]):not([data-button-type="reject"]):active {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-button[disabled] {
+button:not([data-button-type="accept"]):not([data-button-type="reject"])[disabled] {
   background-color: #007bb5;
   cursor: not-allowed;
+}
+
+/* Styles for accept button */
+button[data-button-type="accept"] {
+  background-color: #28a745;
+  color: white;
+}
+
+button[data-button-type="accept"]:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+}
+
+/* Styles for reject button */
+button[data-button-type="reject"] {
+  background-color: #dc3545;
+  color: white;
+}
+
+button[data-button-type="reject"]:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
 }
 
 /* Spinner styles */
@@ -163,3 +185,4 @@ button[disabled] {
   text-align: center;
   margin-bottom: 1rem;
 }
+
