@@ -35,6 +35,7 @@ PUT     /friendRequests/:requestId/respond     controllers.FriendRequestControll
 DELETE  /friendRequests/:requestId             controllers.FriendRequestController.deleteRequest(requestId: Int)
 GET     /friendRequests/:requestId       controllers.FriendRequestController.getFriendRequestById(requestId: Int)
 GET     /friendRequests                     controllers.FriendRequestController.getAllFriendRequests
+DELETE  /friendRequests/user/:userId    controllers.FriendRequestController.deleteRequestByUserId(userId: Int)
 
 # Friendship routes
 GET     /friendships                  controllers.FriendshipController.getFriends

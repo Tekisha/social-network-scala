@@ -118,4 +118,13 @@ class FriendRequestService @Inject()(
       })
     }
   }
+
+  def deleteRequestByUserIds(requesterId: Int, receiverId: Int): Future[Either[String, Int]] = {
+    friendRequestRepository.findPendingRequestBetweenUsers(requesterId, receiverId).flatMap {
+      case Some(request) if request.requesterId == requesterId =>
+        friendRequestRepository.delete(request.id.get).map(Right(_))
+      case Some(_) => Future.successful(Left("Forbidden"))
+      case None => Future.successful(Left("Friend request not found"))
+    }
+  }
 }

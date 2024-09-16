@@ -203,4 +203,47 @@ class FriendRequestControllerSpec extends TestBase {
       status(result) mustBe UNAUTHORIZED
     }
   }
+
+  "FriendRequestController DELETE deleteRequestByUserId" should {
+
+    "successfully delete a friend request by userId" in {
+      val token = getTokenForTestUser("testuser2", "password456")
+
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(DELETE, s"/friendRequests/user/3")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val result = route(app, request).get
+
+      status(result) mustBe NO_CONTENT
+
+      val getRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, s"/friendRequests/2")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val getResult = route(app, getRequest).get
+
+      status(getResult) mustBe NOT_FOUND
+      (contentAsJson(getResult) \ "message").as[String] mustBe "Friend request not found"
+    }
+
+    "return forbidden when trying to delete a request sent by another user" in {
+      val token = getTokenForTestUser("existingUser", "password789")
+
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(DELETE, s"/friendRequests/user/2")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val result = route(app, request).get
+
+      status(result) mustBe FORBIDDEN
+      (contentAsJson(result) \ "message").as[String] mustBe "You are not authorized to delete this request"
+    }
+
+    "return not found for a non-existent friend request with userId" in {
+      val token = getTokenForTestUser("testuser1", "password123")
+      val nonExistentUserId = 999
+
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(DELETE, s"/friendRequests/user/3")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val result = route(app, request).get
+
+      status(result) mustBe NOT_FOUND
+      (contentAsJson(result) \ "message").as[String] mustBe "Friend request not found"
+    }
+  }
 }

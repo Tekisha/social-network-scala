@@ -75,4 +75,14 @@ class FriendRequestController @Inject()(cc: ControllerComponents, friendRequestS
       Ok(Json.toJson(friendRequests))
     }
   }
+
+  def deleteRequestByUserId(userId: Int): Action[AnyContent] = authAction.async { implicit request =>
+    val requesterId = request.userId
+    friendRequestService.deleteRequestByUserIds(requesterId, userId).map {
+      case Right(_) => NoContent
+      case Left("Forbidden") => Forbidden(Json.obj("message" -> "You are not authorized to delete this request"))
+      case Left("Friend request not found") => NotFound(Json.obj("message" -> "Friend request not found"))
+      case Left(errorMessage) => BadRequest(Json.obj("message" -> errorMessage))
+    }
+  }
 }
