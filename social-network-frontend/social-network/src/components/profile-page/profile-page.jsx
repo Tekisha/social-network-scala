@@ -49,7 +49,6 @@ function ProfilePage() {
                 pendingRequest: data.pendingRequest,
                 isCurrentUser: Number(userId) === loggedInUserId,
             });
-            console.log(userInfo)
         } catch (error) {
             setError(error.message);
             console.error("Error fetching user:", error);
@@ -90,10 +89,39 @@ function ProfilePage() {
         }
     };
 
+    const fetchFriends = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/friendships?page=1&pageSize=10`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch friends');
+            }
+
+            const data = await response.json();
+
+            const transformedFriends = data.map(friend => ({
+                ...friend,
+                id: friend.friendId
+            }));
+
+            setFriends(transformedFriends);
+        } catch (error) {
+            setError(error.message);
+            console.error("Error fetching friends:", error);
+        }
+    };
+
     useEffect(() => {
         setLoading(true);
         fetchUser();
         fetchUserPosts();
+        fetchFriends();
         setLoading(false);
     }, [userId]);
 
