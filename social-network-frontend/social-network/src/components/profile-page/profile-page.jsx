@@ -124,14 +124,15 @@ function ProfilePage() {
     };
 
     useEffect(() => {
-        const initializeData = async () => {
-            setLoading(true);
-            await fetchUser();
-            await fetchUserPosts(page);
-        };
-
-        initializeData();
+        setLoading(true);
+        fetchUser();
     }, [userId]);
+
+    useEffect(() => {
+        if (userInfo.isFriend || userInfo.isCurrentUser) {
+            fetchUserPosts(page);
+        }
+    }, [userInfo, page]);
 
     useEffect(() => {
         if (page > 1) {
@@ -356,8 +357,11 @@ function ProfilePage() {
 
                 <h3 className="section-title">Posts</h3>
                 <div className="user-posts">
-                    {posts.length > 0 ? <PostFeed posts={posts} onDeletePost={handleDeletePost} /> : <p>No posts available.</p>}
-                    {loading && <div className="spinner">Loading...</div>}
+                    {userInfo.isFriend || userInfo.isCurrentUser ? (
+                        posts.length > 0 ? <PostFeed posts={posts} onDeletePost={handleDeletePost} /> : <p>No posts available.</p>
+                    ) : (
+                        <p>You need to be friends to view posts.</p>
+                    )}
                 </div>
             </div>
         </div>
