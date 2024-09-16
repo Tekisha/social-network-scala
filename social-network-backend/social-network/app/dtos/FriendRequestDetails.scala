@@ -9,6 +9,7 @@ case class FriendRequestDetails(
                                  id: Int,
                                  requesterId: Int,
                                  requesterUsername: String,
+                                 requesterProfilePhoto: String,
                                  receiverId: Int,
                                  receiverUsername: String,
                                  status: String,

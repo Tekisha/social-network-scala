@@ -85,6 +85,7 @@ class FriendRequestService @Inject()(
           friendRequest.id.getOrElse(0),
           r.id.getOrElse(0),
           r.username,
+          r.profilePhoto.getOrElse("/assets/images/default.png"),
           v.id.getOrElse(0),
           v.username,
           friendRequest.status.value,
@@ -107,6 +108,7 @@ class FriendRequestService @Inject()(
                 id = friendRequest.id.get,
                 requesterId = requester.id.get,
                 requesterUsername = requester.username,
+                requesterProfilePhoto = requester.profilePhoto.getOrElse("/assets/images/default.png"),
                 receiverId = receiver.id.get,
                 receiverUsername = receiver.username,
                 status = friendRequest.status.value,
@@ -125,6 +127,27 @@ class FriendRequestService @Inject()(
         friendRequestRepository.delete(request.id.get).map(Right(_))
       case Some(_) => Future.successful(Left("Forbidden"))
       case None => Future.successful(Left("Friend request not found"))
+    }
+  }
+
+  def findPendingRequestsForReceiver(receiverId: Int, page: Int, pageSize: Int): Future[Seq[FriendRequestDetails]] = {
+    friendRequestRepository.findPendingRequestsByReceiver(receiverId, page, pageSize).flatMap { friendRequests =>
+      Future.sequence(friendRequests.map { friendRequest =>
+        userRepository.getUserById(friendRequest.requesterId).map { requesterOpt =>
+          requesterOpt.map { requester =>
+            FriendRequestDetails(
+              id = friendRequest.id.get,
+              requesterId = requester.id.get,
+              requesterUsername = requester.username,
+              requesterProfilePhoto = requester.profilePhoto.getOrElse("/assets/images/default.png"),
+              receiverId = friendRequest.receiverId,
+              receiverUsername = "",
+              status = friendRequest.status.value,
+              createdAt = friendRequest.createdAt
+            )
+          }
+        }
+      }).map(_.flatten)
     }
   }
 }

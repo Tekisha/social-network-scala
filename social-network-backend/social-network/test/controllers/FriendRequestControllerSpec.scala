@@ -246,4 +246,49 @@ class FriendRequestControllerSpec extends TestBase {
       (contentAsJson(result) \ "message").as[String] mustBe "Friend request not found"
     }
   }
+
+  "FriendRequestController GET getReceivedPendingRequests" should {
+
+    "return pending friend requests received by the logged-in user" in {
+      val token = getTokenForTestUser("existingUser", "password789")
+
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendRequests/receivedPending?page=1&pageSize=10")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val result = route(app, request).get
+
+      status(result) mustBe OK
+      val friendRequests = contentAsJson(result).as[Seq[JsObject]]
+
+      friendRequests.nonEmpty mustBe true
+
+      val requestStatuses = friendRequests.map(request => (request \ "status").as[String])
+      requestStatuses.forall(_ == "pending") mustBe true
+
+      val requesterIds = friendRequests.map(request => (request \ "requesterId").as[Int])
+      requesterIds.nonEmpty mustBe true
+
+      val profilePhotos = friendRequests.map(request => (request \ "requesterProfilePhoto").asOpt[String])
+      profilePhotos.foreach(photo => photo.nonEmpty mustBe true)
+    }
+
+    "return an empty list when there are no pending friend requests" in {
+      val token = getTokenForTestUser("testuser2", "password456")
+
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendRequests/receivedPending?page=1&pageSize=10")
+        .withHeaders("Authorization" -> s"Bearer $token")
+      val result = route(app, request).get
+
+      status(result) mustBe OK
+      val friendRequests = contentAsJson(result).as[Seq[JsObject]]
+
+      friendRequests.isEmpty mustBe true
+    }
+
+    "return 401 Unauthorized when no token is provided" in {
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/friendRequests/receivedPending?page=1&pageSize=10")
+      val result = route(app, request).get
+
+      status(result) mustBe UNAUTHORIZED
+    }
+  }
 }
