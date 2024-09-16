@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, {useState, useEffect, useRef} from "react";
 import Navbar from '../navbar/navbar.jsx';
 import PostFeed from '../post-feed/post-feed.jsx';
 import CreatePost from '../forms/create-post/create-post.jsx';
@@ -11,8 +11,17 @@ function MainPage() {
     const [pageSize] = useState(4);
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMorePosts, setHasMorePosts] = useState(true);
+    const hasFetchedPosts = useRef(false);
 
     const fetchPosts = async (currentPage) => {
+        if (hasFetchedPosts.current && currentPage === 1) {
+            return;
+        }
+
+        if (currentPage === 1) {
+            hasFetchedPosts.current = true;
+        }
+
         const token = localStorage.getItem("token");
 
         try {

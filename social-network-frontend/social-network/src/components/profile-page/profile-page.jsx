@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, {useState, useEffect, useRef} from "react";
 import Navbar from '../navbar/navbar.jsx';
 import UsersList from '../user-list/user-list.jsx';
 import EditProfileModal from '../forms/edit-profile/edit-profile-modal.jsx';
@@ -20,13 +20,17 @@ function ProfilePage() {
     const [friends, setFriends] = useState([]);
     const [showFriendsModal, setShowFriendsModal] = useState(false);
     const [showEditProfileModal, setShowEditProfileModal] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [notification, setNotification] = useState('');
+    const [hasMorePosts, setHasMorePosts] = useState(true);
+    const [page, setPage] = useState(1);
+    const pageSize = 4;
 
     const token = localStorage.getItem("token");
     const decodedToken = decodeJWT(token);
     const loggedInUserId = decodedToken.userId;
+
+    const hasFetchedPosts = useRef(false);
 
     const fetchUser = async () => {
         try {
@@ -56,9 +60,17 @@ function ProfilePage() {
         }
     };
 
-    const fetchUserPosts = async () => {
+    const fetchUserPosts = async (pageToFetch = 1) => {
+        if (hasFetchedPosts.current && pageToFetch === 1) {
+            return;
+        }
+
+        if (pageToFetch === 1) {
+            hasFetchedPosts.current = true;
+        }
+
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/user/${userId}?page=1&pageSize=10`, {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/user/${userId}?page=${pageToFetch}&pageSize=${pageSize}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -83,12 +95,50 @@ function ProfilePage() {
                 profilePhoto: postData.profilePhoto,
             }));
 
-            setPosts(transformedPosts);
+            if (transformedPosts.length < pageSize) {
+                setHasMorePosts(false);
+            }
+
+            setPosts(prevPosts => [...prevPosts, ...transformedPosts]);
         } catch (error) {
             setError(error.message);
             console.error("Error fetching user posts:", error);
+        } finally {
+            setLoading(false);
         }
     };
+
+    const handleScroll = () => {
+        if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || loading) {
+            return;
+        }
+
+        if (hasMorePosts) {
+            setPage(prevPage => prevPage + 1);
+        }
+    };
+
+    useEffect(() => {
+        const initializeData = async () => {
+            setLoading(true);
+            await fetchUser();
+            await fetchUserPosts(page);
+        };
+
+        initializeData();
+    }, [userId]);
+
+    useEffect(() => {
+        if (page > 1) {
+            fetchUserPosts(page);
+        }
+    }, [page]);
+
+    useEffect(() => {
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [loading, hasMorePosts]);
+
 
     const fetchFriends = async () => {
         try {
@@ -105,7 +155,6 @@ function ProfilePage() {
             }
 
             const data = await response.json();
-
             const transformedFriends = data.map(friend => ({
                 ...friend,
                 id: friend.friendId
@@ -119,11 +168,7 @@ function ProfilePage() {
     };
 
     useEffect(() => {
-        setLoading(true);
-        fetchUser();
-        fetchUserPosts();
         fetchFriends();
-        setLoading(false);
     }, [userId]);
 
     const handleAddFriend = async () => {
@@ -205,17 +250,12 @@ function ProfilePage() {
         }
     };
 
-    const toggleFriendsModal = () => {
-        setShowFriendsModal(!showFriendsModal);
+    const handleDeletePost = (postId) => {
+        setPosts((prevPosts) => prevPosts.filter(post => post.id !== postId));
     };
 
-    const toggleEditProfileModal = () => {
-        setShowEditProfileModal(!showEditProfileModal);
-    };
-
-    const refreshUser = () => {
-        fetchUser();
-    };
+    const toggleFriendsModal = () => setShowFriendsModal(!showFriendsModal);
+    const toggleEditProfileModal = () => setShowEditProfileModal(!showEditProfileModal);
 
     return (
         <div className="profile-page-wrapper">
@@ -265,21 +305,14 @@ function ProfilePage() {
                     <EditProfileModal
                         userInfo={userInfo}
                         onClose={toggleEditProfileModal}
-                        refreshUser={refreshUser}
+                        refreshUser={fetchUser}
                     />
                 )}
 
                 <h3 className="section-title">Posts</h3>
                 <div className="user-posts">
-                    {loading ? (
-                        <div className="spinner"></div>
-                    ) : (
-                        userInfo.isFriend || userInfo.isCurrentUser ? (
-                            <PostFeed posts={posts} />
-                        ) : (
-                            <p key="become-friends">Become friends to see posts!</p>
-                        )
-                    )}
+                    {posts.length > 0 ? <PostFeed posts={posts} onDeletePost={handleDeletePost} /> : <p>No posts available.</p>}
+                    {loading && <div className="spinner">Loading...</div>}
                 </div>
             </div>
         </div>

@@ -52,7 +52,7 @@ function PostDetails() {
         const token = localStorage.getItem('token');
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/${postId}/comments?page=1&pageSize=50`, {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts/${postId}/comments?page=1&pageSize=100`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
