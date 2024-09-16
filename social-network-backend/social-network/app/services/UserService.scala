@@ -41,10 +41,18 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
     for {
       userOpt <- userRepository.getUserById(id)
       isFriend <- if (id == authenticatedUserId) Future.successful(false)
-                  else userRepository.areFriends(authenticatedUserId, id)
+      else userRepository.areFriends(authenticatedUserId, id)
+      pendingRequest <- if (id == authenticatedUserId) Future.successful(false)
+      else userRepository.hasPendingFriendRequestFromAuthenticatedUser(authenticatedUserId, id)
     } yield {
       userOpt.map { user =>
-        UserResponse(user.id, user.username, user.profilePhoto, isFriend)
+        UserResponse(
+          id = user.id,
+          username = user.username,
+          profilePhoto = user.profilePhoto,
+          isFriend = isFriend,
+          pendingRequest = pendingRequest
+        )
       }
     }
   }

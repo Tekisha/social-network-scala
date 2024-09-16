@@ -3,6 +3,7 @@ package repositories
 import models.{User, Tables}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
+import enums.FriendRequestStatus
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -80,5 +81,14 @@ class UserRepository @Inject() (override protected val dbConfigProvider: Databas
         (friendship.userId1 === userId2 && friendship.userId2 === userId1)
     }
     db.run(query.exists.result)
+  }
+
+  def hasPendingFriendRequestFromAuthenticatedUser(requesterId: Int, receiverId: Int): Future[Boolean] = {
+    val query = friendRequests.filter { fr =>
+      fr.requesterId === requesterId &&
+        fr.receiverId === receiverId &&
+        fr.status === (FriendRequestStatus.Pending: FriendRequestStatus)
+    }.exists
+    db.run(query.result)
   }
 }
