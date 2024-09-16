@@ -9,7 +9,7 @@ function PostFeed({ posts }) {
         setPostList(postList.filter(post => post.id !== postId));
     };
 
-    if (!postList) {  
+    if (!postList) {
         return <div>Loading...</div>;
     }
 
