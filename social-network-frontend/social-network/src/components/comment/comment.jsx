@@ -49,6 +49,10 @@ function Comment({ comment, postId, token, loggedInUserId, onDeleteComment }) {
     };
 
     const handleDelete = async () => {
+        const confirmed = window.confirm("Are you sure you want to delete this comment?");
+
+        if (!confirmed) return;
+
         setError(null);
         try {
             const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/comments/${comment.comment.id}`, {

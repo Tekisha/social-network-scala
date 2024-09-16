@@ -58,6 +58,7 @@ function ProfilePage() {
                 pendingRequest: data.pendingRequest,
                 isCurrentUser: Number(userId) === loggedInUserId,
             });
+
         } catch (error) {
             setError(error.message);
             console.error("Error fetching user:", error);
@@ -206,7 +207,7 @@ function ProfilePage() {
 
     useEffect(() => {
         if (showFriendsModal) {
-            fetchFriends(1); // Fetch first page when the modal opens
+            fetchFriends(1);
         }
     }, [showFriendsModal]);
 
