@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import CreatePost from '../forms/create-post/create-post.jsx';
-import "./comment.css";
+import './comment.css';
 import { Link } from 'react-router-dom';
 
-function Comment({ comment, postId, token }) {
+function Comment({ comment, postId, token, loggedInUserId, onDeleteComment }) {
     const [showReplies, setShowReplies] = useState(false);
     const [replies, setReplies] = useState(comment.replies || []);
     const [replying, setReplying] = useState(false);
     const [error, setError] = useState(null);
 
+    console.log("userID:"+comment.comment.userId)
+    console.log("logged in:"+loggedInUserId)
     const toggleReplies = () => {
         setShowReplies(!showReplies);
     };
@@ -46,6 +48,26 @@ function Comment({ comment, postId, token }) {
         }
     };
 
+    const handleDelete = async () => {
+        setError(null);
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/comments/${comment.comment.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete comment');
+            }
+
+            onDeleteComment(comment.comment.id);
+        } catch (error) {
+            setError(error.message);
+        }
+    };
+
     return (
         <div className="comment">
             <div className="comment-header">
@@ -77,6 +99,12 @@ function Comment({ comment, postId, token }) {
                     <i className="fas fa-comment"></i>
                     <span>Reply</span>
                 </div>
+                {comment.comment.userId === loggedInUserId && (
+                    <div onClick={handleDelete} className="delete-comment-button">
+                        <i className="fas fa-trash"></i>
+                        <span>Delete</span>
+                    </div>
+                )}
             </div>
 
             {replying && (
@@ -89,7 +117,14 @@ function Comment({ comment, postId, token }) {
             {showReplies && (
                 <div className="replies">
                     {replies.map(reply => (
-                        <Comment key={reply.comment.id} comment={reply} postId={postId} token={token} />
+                        <Comment
+                            key={reply.comment.id}
+                            comment={reply}
+                            postId={postId}
+                            token={token}
+                            loggedInUserId={loggedInUserId}
+                            onDeleteComment={onDeleteComment}
+                        />
                     ))}
                 </div>
             )}

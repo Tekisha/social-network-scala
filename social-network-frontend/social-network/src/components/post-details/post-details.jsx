@@ -5,6 +5,7 @@ import Comment from '../comment/comment.jsx';
 import CreatePost from '../forms/create-post/create-post.jsx';
 import Navbar from '../navbar/navbar.jsx';
 import './post-details.css';
+import { decodeJWT } from "../../utils/jwtUtils.js";
 
 function PostDetails() {
     const { postId } = useParams();
@@ -12,6 +13,8 @@ function PostDetails() {
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(true);
     const token = localStorage.getItem('token');
+    const decodedToken = decodeJWT(token);
+    const loggedInUserId = decodedToken.userId;
 
     const fetchPostDetails = async () => {
         try {
@@ -69,8 +72,6 @@ function PostDetails() {
     };
 
     const handleCreateComment = async (commentText) => {
-        const token = localStorage.getItem('token');
-
         const requestBody = {
             content: commentText,
             parentCommentId: null,
@@ -97,6 +98,10 @@ function PostDetails() {
         }
     };
 
+    const handleDeleteComment = (commentId) => {
+        setComments((prevComments) => prevComments.filter(comment => comment.comment.id !== commentId));
+    };
+
     useEffect(() => {
         fetchPostDetails();
         fetchComments();
@@ -121,7 +126,14 @@ function PostDetails() {
                         <p>No comments yet.</p>
                     ) : (
                         comments.map((comment) => (
-                            <Comment key={comment.comment.id} comment={comment} postId={postId} token={token}/>
+                            <Comment
+                                key={comment.comment.id}
+                                comment={comment}
+                                postId={postId}
+                                token={token}
+                                loggedInUserId={loggedInUserId}
+                                onDeleteComment={handleDeleteComment}
+                            />
                         ))
                     )}
                 </div>
