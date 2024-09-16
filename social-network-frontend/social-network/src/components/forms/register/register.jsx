@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import { useNavigate } from "react-router-dom";
 import '../forms.css';
+import {isAuthenticated} from "../../../utils/auth.js";
 
 function Register() {
     const [username, setUsername] = useState("");
@@ -10,6 +11,12 @@ function Register() {
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (isAuthenticated()) {
+            navigate("/home"); 
+        }
+    }, [navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
