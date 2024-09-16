@@ -14,6 +14,7 @@ function ProfilePage() {
         profilePic: "/src/assets/user-icon.png",
         isCurrentUser: false,
         isFriend: false,
+        pendingRequest: false,
     });
     const [posts, setPosts] = useState([]);
     const [friends, setFriends] = useState([]);
@@ -45,8 +46,10 @@ function ProfilePage() {
                 username: data.username,
                 profilePic: `${import.meta.env.VITE_BACKEND_URL}${data.profilePhoto}`,
                 isFriend: data.isFriend,
-                isCurrentUser: Number(userId) === loggedInUserId
+                pendingRequest: data.pendingRequest,
+                isCurrentUser: Number(userId) === loggedInUserId,
             });
+            console.log(userInfo)
         } catch (error) {
             setError(error.message);
             console.error("Error fetching user:", error);
@@ -68,7 +71,6 @@ function ProfilePage() {
             }
 
             const data = await response.json();
-            console.log(response)
             const transformedPosts = data.map(postData => ({
                 id: postData.post.id,
                 username: postData.username,
@@ -95,14 +97,83 @@ function ProfilePage() {
         setLoading(false);
     }, [userId]);
 
-    const handleAddFriend = () => {
-        console.log("Friend request sent");
-        setUserInfo({ ...userInfo, isFriend: true });
+    const handleAddFriend = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/friendRequests`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    receiverId: Number(userId)
+                })
+            });
+
+            if (response.status === 400) {
+                const data = await response.json();
+                if (data.message === 'A pending friend request already exists between these users') {
+                    alert("There's a pending friend request. Please check your requests to respond.");
+                    return;
+                }
+            }
+
+            if (!response.ok) {
+                throw new Error('Failed to send friend request');
+            }
+
+            const data = await response.json();
+            console.log("Friend request sent", data);
+
+            setUserInfo({ ...userInfo, pendingRequest: true });
+        } catch (error) {
+            console.error("Error sending friend request:", error);
+            setError(error.message);
+        }
     };
 
-    const handleRemoveFriend = () => {
-        console.log("Friend removed");
-        setUserInfo({ ...userInfo, isFriend: false });
+    const handleRemoveRequest = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/friendRequests/user/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to remove friend request');
+            }
+
+            console.log("Friend request removed");
+            setUserInfo({ ...userInfo, pendingRequest: false });
+        } catch (error) {
+            console.error("Error removing friend request:", error);
+            setError(error.message);
+        }
+    };
+
+    const handleRemoveFriend = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/friendships/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to remove friend');
+            }
+
+            console.log("Friend removed successfully");
+            setUserInfo({ ...userInfo, isFriend: false });
+        } catch (error) {
+            console.error("Error removing friend:", error);
+            setError(error.message);
+        }
     };
 
     const toggleFriendsModal = () => {
@@ -114,7 +185,6 @@ function ProfilePage() {
     };
 
     const handleSaveProfile = (updatedInfo) => {
-        console.log("Updated Info:", updatedInfo);
         setUserInfo({ ...userInfo, username: updatedInfo.username });
     };
 
@@ -138,6 +208,10 @@ function ProfilePage() {
                         ) : userInfo.isFriend ? (
                             <button className="friend-button" onClick={handleRemoveFriend}>
                                 <i className="fas fa-user-minus"></i> Remove Friend
+                            </button>
+                        ) : userInfo.pendingRequest ? (
+                            <button className="friend-button" onClick={handleRemoveRequest}>
+                                <i className="fas fa-times"></i> Remove Request
                             </button>
                         ) : (
                             <button className="friend-button" onClick={handleAddFriend}>
