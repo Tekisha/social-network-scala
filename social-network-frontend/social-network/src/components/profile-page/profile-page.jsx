@@ -248,6 +248,9 @@ function ProfilePage() {
     };
 
     const handleRemoveRequest = async () => {
+        const isConfirmed = window.confirm("Are you sure you want to remove this friend request?");
+        if (!isConfirmed) return;
+
         try {
             const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/friendRequests/user/${userId}`, {
                 method: 'DELETE',
@@ -270,6 +273,9 @@ function ProfilePage() {
     };
 
     const handleRemoveFriend = async () => {
+        const isConfirmed = window.confirm("Are you sure you want to remove this friend?");
+        if (!isConfirmed) return;
+
         try {
             const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/friendships/${userId}`, {
                 method: 'DELETE',
@@ -308,12 +314,12 @@ function ProfilePage() {
                         <h2 className="username">{userInfo.username}</h2>
                         {userInfo.isCurrentUser && (
                             <button className="view-friends-button" onClick={toggleFriendsModal}>
-                                View Friends
+                                <i className="fas fa-user-group"></i> Friends
                             </button>
                         )}
                         {userInfo.isCurrentUser ? (
                             <button className="edit-button" onClick={toggleEditProfileModal}>
-                                <i className="fas fa-edit"></i> Edit Profile
+                                <i className="fas fa-edit"></i> Edit
                             </button>
                         ) : userInfo.isFriend ? (
                             <button className="friend-button" onClick={handleRemoveFriend}>

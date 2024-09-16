@@ -24,7 +24,6 @@ function UsersList({ title, users, closeModal, loading }) {
             ) : (
                 <p>No users found.</p>
             )}
-            {loading && <div className="spinner">Loading more users...</div>}
         </div>
     );
 }
