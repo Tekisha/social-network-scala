@@ -1,0 +1,188 @@
+/* Root and base styles */
+:root {
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #2f51a8 0%, #ffffff 80%);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+h1, h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Input group styles */
+.input-group {
+  margin-bottom: 1.25rem;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #555;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: background-color 0.3s, border-color 0.3s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.input-group input:focus {
+  border: 1px solid #0095f6;
+  outline: none;
+}
+
+.input-group input:hover {
+  background-color: #f5f8fa;
+}
+
+.input-group input::placeholder {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.input-group input:focus::placeholder {
+  opacity: 0.5;
+}
+
+/* Global button styles for all buttons except accept and reject */
+button:not([data-button-type="accept"]):not([data-button-type="reject"]) {
+  width: 100%;
+  padding: 0.75rem;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  transition: background-color 0.3s, transform 0.3s;
+  background: linear-gradient(90deg, #0095f6, #007bb5);
+}
+
+button:not([data-button-type="accept"]):not([data-button-type="reject"]):hover {
+  background-color: #007bb5;
+  transform: translateY(-2px);
+}
+
+button:not([data-button-type="accept"]):not([data-button-type="reject"]):active {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+button:not([data-button-type="accept"]):not([data-button-type="reject"])[disabled] {
+  background-color: #007bb5;
+  cursor: not-allowed;
+}
+
+/* Styles for accept button */
+button[data-button-type="accept"] {
+  background-color: #28a745;
+  color: white;
+}
+
+button[data-button-type="accept"]:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+}
+
+/* Styles for reject button */
+button[data-button-type="reject"] {
+  background-color: #dc3545;
+  color: white;
+}
+
+button[data-button-type="reject"]:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
+}
+
+/* Spinner styles */
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #ffffff;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Redirect styles */
+.form-redirect {
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.form-redirect a {
+  position: relative;
+  display: inline-block;
+  color: #0095f6;
+  text-decoration: none;
+}
+
+.form-redirect a::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: #0095f6;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  transform-origin: bottom right;
+}
+
+.form-redirect a:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+/* Error message */
+.error-message {
+  color: red;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* Success message */
+.success-message {
+  color: green;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+

@@ -1,0 +1,78 @@
+.friend-requests-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.friend-requests-page-container {
+    margin-top: 2rem;
+    padding: 2rem;
+    background-color: #fff;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    width: 100%;
+}
+
+.friend-requests-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.friend-requests-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.friend-request-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.friend-request-item:hover {
+    transform: translateY(-2px);
+}
+
+.friend-request-info {
+    display: flex;
+    align-items: center;
+}
+
+.friend-request-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 1rem;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.friend-request-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Specific styles for accept and reject buttons */
+button[data-button-type="accept"],
+button[data-button-type="reject"] {
+    width: auto;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-bottom: 0;
+}
+
+
