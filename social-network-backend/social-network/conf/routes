@@ -32,9 +32,11 @@ DELETE  /comments/:commentId    controllers.CommentController.deleteComment(comm
 # Friend request routes
 POST    /friendRequests                        controllers.FriendRequestController.sendFriendRequest
 PUT     /friendRequests/:requestId/respond     controllers.FriendRequestController.respondToRequest(requestId: Int)
+GET     /friendRequests/receivedPending     controllers.FriendRequestController.getReceivedPendingRequests
 DELETE  /friendRequests/:requestId             controllers.FriendRequestController.deleteRequest(requestId: Int)
 GET     /friendRequests/:requestId       controllers.FriendRequestController.getFriendRequestById(requestId: Int)
 GET     /friendRequests                     controllers.FriendRequestController.getAllFriendRequests
+DELETE  /friendRequests/user/:userId    controllers.FriendRequestController.deleteRequestByUserId(userId: Int)
 
 # Friendship routes
 GET     /friendships                  controllers.FriendshipController.getFriends

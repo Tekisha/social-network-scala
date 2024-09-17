@@ -25,8 +25,8 @@ class PostService @Inject()(postRepository: PostRepository)(implicit ec: Executi
     postRepository.getAllPostsWithLikes(userId, page, pageSize)
   }
 
-  def getUserPosts(userId: Int, page: Int, pageSize: Int): Future[Seq[PostWithLikes]] = {
-    postRepository.getUserPostsWithLikes(userId, page, pageSize)
+  def getUserPosts(userId: Int, page: Int, pageSize: Int, currentUserId: Int): Future[Seq[PostWithLikes]] = {
+    postRepository.getUserPostsWithLikes(userId, page, pageSize, currentUserId)
   }
 
   def getFriendsPosts(userId: Int, page: Int, pageSize: Int): Future[Seq[PostWithLikes]] = {

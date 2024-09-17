@@ -75,4 +75,27 @@ class FriendRequestController @Inject()(cc: ControllerComponents, friendRequestS
       Ok(Json.toJson(friendRequests))
     }
   }
+
+  def deleteRequestByUserId(userId: Int): Action[AnyContent] = authAction.async { implicit request =>
+    val requesterId = request.userId
+    friendRequestService.deleteRequestByUserIds(requesterId, userId).map {
+      case Right(_) => NoContent
+      case Left("Forbidden") => Forbidden(Json.obj("message" -> "You are not authorized to delete this request"))
+      case Left("Friend request not found") => NotFound(Json.obj("message" -> "Friend request not found"))
+      case Left(errorMessage) => BadRequest(Json.obj("message" -> errorMessage))
+    }
+  }
+
+  def getReceivedPendingRequests: Action[AnyContent] = authAction.async { implicit request =>
+    val userId = request.userId
+    val pageParam = request.getQueryString("page").map(_.trim)
+    val pageSizeParam = request.getQueryString("pageSize").map(_.trim)
+
+    val pageNum = pageParam.flatMap(p => scala.util.Try(p.toInt).toOption).getOrElse(1)
+    val pageSizeNum = pageSizeParam.flatMap(ps => scala.util.Try(ps.toInt).toOption).getOrElse(10)
+
+    friendRequestService.findPendingRequestsForReceiver(userId, pageNum, pageSizeNum).map { friendRequests =>
+      Ok(Json.toJson(friendRequests))
+    }
+  }
 }

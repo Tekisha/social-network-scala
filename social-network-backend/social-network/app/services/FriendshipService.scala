@@ -15,7 +15,7 @@ class FriendshipService @Inject()(friendshipRepository: FriendshipRepository, us
         val friendId = if (friendship.userId1 == userId) friendship.userId2 else friendship.userId1
         userRepository.getUserById(friendId).map { userOpt =>
           userOpt.map { user =>
-            FriendDetails(Some(friendship.id.get), user.id.get, user.username)
+            FriendDetails(Some(friendship.id.get), user.id.get, user.username, user.profilePhoto.get)
           }
         }
       }

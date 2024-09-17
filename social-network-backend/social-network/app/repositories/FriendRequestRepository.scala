@@ -39,4 +39,22 @@ class FriendRequestRepository @Inject()(override protected val dbConfigProvider:
         req.status === (FriendRequestStatus.Pending: FriendRequestStatus)
     ).result.headOption)
   }
+
+  def deleteByUserIds(requesterId: Int, receiverId: Int): Future[Int] = {
+    db.run(
+      friendRequests.filter(req =>
+        (req.requesterId === requesterId && req.receiverId === receiverId) ||
+          (req.requesterId === receiverId && req.receiverId === requesterId)
+      ).delete
+    )
+  }
+
+  def findPendingRequestsByReceiver(receiverId: Int, page: Int, pageSize: Int): Future[Seq[FriendRequest]] = {
+    val offset = (page - 1) * pageSize
+    db.run(
+      friendRequests.filter(req =>
+        req.receiverId === receiverId && req.status === (FriendRequestStatus.Pending: FriendRequestStatus)
+      ).drop(offset).take(pageSize).result
+    )
+  }
 }

@@ -9,6 +9,7 @@ import exceptions.UsernameAlreadyExistsException
 import utils.PasswordUtils
 import play.api.libs.Files.TemporaryFile
 import java.nio.file.{Files, Path, Paths}
+import dtos.UserResponse
 
 @Singleton
 class UserService @Inject() (userRepository: UserRepository)(implicit ec: ExecutionContext) {
@@ -18,7 +19,7 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
       case Some(_) => Future.failed(new UsernameAlreadyExistsException())
       case None =>
         val hashedPassword = PasswordUtils.hashPassword(password)
-        val newUser = User(None, username, hashedPassword, None)
+        val newUser = User(None, username, hashedPassword,  Some("/assets/images/default.png"))
         userRepository.createNewUser(newUser)
     }
   }
@@ -36,8 +37,24 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
     userRepository.getAllUsers(page, pageSize)
   }
 
-  def getUserById(id: Int): Future[Option[User]] = {
-    userRepository.getUserById(id)
+  def getUserById(id: Int, authenticatedUserId: Int): Future[Option[UserResponse]] = {
+    for {
+      userOpt <- userRepository.getUserById(id)
+      isFriend <- if (id == authenticatedUserId) Future.successful(false)
+      else userRepository.areFriends(authenticatedUserId, id)
+      pendingRequest <- if (id == authenticatedUserId) Future.successful(false)
+      else userRepository.hasPendingFriendRequestFromAuthenticatedUser(authenticatedUserId, id)
+    } yield {
+      userOpt.map { user =>
+        UserResponse(
+          id = user.id,
+          username = user.username,
+          profilePhoto = user.profilePhoto,
+          isFriend = isFriend,
+          pendingRequest = pendingRequest
+        )
+      }
+    }
   }
 
   def updateBasicInfo(authenticatedUserId: Int, newUsername: String): Future[Either[String, (User, String)]] = {
@@ -98,8 +115,12 @@ class UserService @Inject() (userRepository: UserRepository)(implicit ec: Execut
     userRepository.updateProfilePhoto(userId, s"/assets/images/users/$filename").map(_ => ())
   }
 
-  def searchUsersByUsername(username: String, page: Int, pageSize: Int): Future[Seq[User]] = {
-    userRepository.searchByUsername(username, page, pageSize)
+  def searchUsersByUsername(username: String, authenticatedUserId: Int, page: Int, pageSize: Int): Future[Seq[UserResponse]] = {
+    userRepository.searchByUsername(authenticatedUserId, username, page, pageSize).map { usersWithFriendFlag =>
+      usersWithFriendFlag.map { case (user, isFriend) =>
+        UserResponse(user.id, user.username, user.profilePhoto, isFriend)
+      }
+    }
   }
 
   private def generateUpdatedToken(user: User): Either[String, (User, String)] = {
