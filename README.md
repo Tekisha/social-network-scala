@@ -2,6 +2,10 @@
 
 This is a full-stack social networking application that includes basic functionalities such as registering, logging in, posting, liking, disliking, friend requests, and more. The project is implemented using **Scala (Play Framework)** on the backend, **ReactJS** on the frontend, and **MySQL** as the database. The application allows users to interact with each other by creating posts, adding friends, and liking/disliking posts.
 
+
+## Demo
+You can view a demonstration of the project at the following link: [YouTube Demo](https://youtu.be/gdCzbpRTfcM).
+
 ## Features
 
 ### Authentication
@@ -34,9 +38,6 @@ This is a full-stack social networking application that includes basic functiona
 
 ### Commenting
 - **Post Comments**: Users can comment on posts.
-  
-## Demo
-You can view a demonstration of the project at the following link: [YouTube Demo](https://youtu.be/gdCzbpRTfcM).
 
 ## Technologies Used
 ### Backend:
